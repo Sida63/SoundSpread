@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -15,6 +16,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.SeekBar;
+import android.widget.Toast;
 
 public class MainActivity extends Activity implements OnClickListener ,SeekBar.OnSeekBarChangeListener{
     private MediaPlayer mMediaPlayer=null;//媒体播放器
@@ -22,12 +24,16 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
     private Button mPlayButton=null;
     private Button mPauseButton=null;
     private Button mStopButton=null;
+    private Button addbookmark=null;
+    private Button checkbookmark=null;
     private SeekBar mSoundSeekBar=null;
     private SeekBar mSoundProcessBar=null;
     private Timer mTimer=new Timer();
     private int maxStreamVolume;//最大音量
     private int currentStreamVolume;//当前音量
     private int setStreamVolume;//设置的音量
+    public DataEntity bookmarkentity;
+    private DataList bookmarklist;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,11 +43,15 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
         mPlayButton=(Button)findViewById(R.id.Play);
         mPauseButton=(Button)findViewById(R.id.Pause);
         mStopButton=(Button)findViewById(R.id.Stop);
+        addbookmark=(Button)findViewById(R.id.bookmark);
+        checkbookmark=(Button)findViewById(R.id.checkbookmark);
         mSoundSeekBar=(SeekBar)findViewById(R.id.SoundSeekBar);
         mSoundProcessBar=(SeekBar)findViewById(R.id.soundprocessseekBar);
         mPlayButton.setOnClickListener(this);
         mPauseButton.setOnClickListener(this);
         mStopButton.setOnClickListener(this);
+        addbookmark.setOnClickListener(this);
+        checkbookmark.setOnClickListener(this);
         maxStreamVolume=mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
         currentStreamVolume=mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
         mSoundSeekBar.setMax(maxStreamVolume);
@@ -50,6 +60,7 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
         mSoundProcessBar.setProgress(0);
         mSoundProcessBar.setMax(mMediaPlayer.getDuration());
         mSoundProcessBar.setOnSeekBarChangeListener(this);
+        bookmarklist = new DataList();
         final Handler handleProgress = new Handler() {
             public void handleMessage(Message msg) {
 
@@ -87,6 +98,22 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
     public void onClick(View v) {
         // TODO Auto-generated method stub
         switch(v.getId()){
+            case R.id.bookmark:
+                bookmarkentity = new DataEntity();
+                int tempal=0;
+                tempal=mMediaPlayer.getCurrentPosition();
+                bookmarkentity.setBookmarktime(tempal);
+                bookmarklist.additem(bookmarkentity);
+                Toast.makeText(MainActivity.this,Integer.toString(tempal),Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.checkbookmark:
+                Intent intent = new Intent();
+                intent.setClass(MainActivity.this, EditActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putSerializable("datalist", bookmarklist);
+                intent.putExtras(bundle);
+                startActivity(intent);
+                break;
             case R.id.Play:
                 mMediaPlayer.start();
                 break;
