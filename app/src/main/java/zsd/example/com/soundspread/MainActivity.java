@@ -31,7 +31,7 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
     private Timer mTimer=new Timer();
     private int maxStreamVolume;//最大音量
     private int currentStreamVolume;//当前音量
-    private int setStreamVolume;//设置的音量
+    //private int setStreamVolume;//设置的音量
     public DataEntity bookmarkentity;
     private DataList bookmarklist;
     @Override
