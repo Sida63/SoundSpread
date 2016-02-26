@@ -21,7 +21,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".EditActivity" />
-        <activity android:name=".ShowActivity"></activity>
+        <activity android:name=".ShowActivity" />
+        <activity android:name=".ShareActivity"></activity>
     </application>
 
 </manifest>

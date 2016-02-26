@@ -32,7 +32,8 @@
         android:text="CheckClipfile"
         android:id="@+id/checkclipfile"
         android:layout_alignTop="@+id/clipaudio"
-        android:layout_centerHorizontal="true" />
+        android:layout_alignRight="@+id/showbookmark"
+        android:layout_alignEnd="@+id/showbookmark" />
 
     <Spinner
         android:layout_width="wrap_content"
@@ -42,12 +43,4 @@
         android:layout_alignLeft="@+id/checkclipfile"
         android:layout_alignStart="@+id/checkclipfile" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Share"
-        android:id="@+id/buttonshare"
-        android:layout_alignTop="@+id/checkclipfile"
-        android:layout_alignRight="@+id/shownextbookmark"
-        android:layout_alignEnd="@+id/shownextbookmark" />
 </RelativeLayout>
