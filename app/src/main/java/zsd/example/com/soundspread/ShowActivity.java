@@ -40,6 +40,7 @@ public class ShowActivity extends AppCompatActivity {
                 share.putExtra(Intent.EXTRA_STREAM, uri);
                 startActivity(Intent.createChooser(share, "Share Sound File"));
 
+                Toast.makeText(ShowActivity.this,"/mnt/sdcard/soundspread/clip/"+items[arg2],Toast.LENGTH_SHORT).show();
             }
 
         });
