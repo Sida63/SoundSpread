@@ -7,6 +7,7 @@ import java.util.TimerTask;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.app.Activity;
 import android.os.Handler;
@@ -38,7 +39,15 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mMediaPlayer=MediaPlayer.create(this, R.raw.happyis);//加载res/raw的happyis.mp3文件
+       // mMediaPlayer=MediaPlayer.create(this, R.raw.happyis);//加载res/raw的happyis.mp3文件
+        Uri uri=Uri.parse("/mnt/sdcard/soundspread/happyis.mp3");
+        Intent intent=getIntent();
+        if(intent.getExtras()!=null) {
+            Bundle bundle = intent.getExtras();
+            String temp = (String) bundle.getSerializable("uri");
+            uri=Uri.parse(temp);
+        }
+        mMediaPlayer=MediaPlayer.create(this,uri);
         mAudioManager=(AudioManager)this.getSystemService(AUDIO_SERVICE);
         mPlayButton=(Button)findViewById(R.id.Play);
         mPauseButton=(Button)findViewById(R.id.Pause);
