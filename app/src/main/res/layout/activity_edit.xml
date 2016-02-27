@@ -32,10 +32,7 @@
         android:text="CheckClipfile"
         android:id="@+id/checkclipfile"
         android:layout_alignTop="@+id/clipaudio"
-        android:layout_toRightOf="@+id/clipaudio"
-        android:layout_toEndOf="@+id/clipaudio"
-        android:layout_marginLeft="53dp"
-        android:layout_marginStart="53dp" />
+        android:layout_centerHorizontal="true" />
 
     <Spinner
         android:layout_width="wrap_content"
@@ -44,4 +41,13 @@
         android:layout_alignParentTop="true"
         android:layout_alignLeft="@+id/checkclipfile"
         android:layout_alignStart="@+id/checkclipfile" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Share"
+        android:id="@+id/buttonshare"
+        android:layout_alignTop="@+id/checkclipfile"
+        android:layout_alignRight="@+id/shownextbookmark"
+        android:layout_alignEnd="@+id/shownextbookmark" />
 </RelativeLayout>
