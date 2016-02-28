@@ -61,7 +61,7 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
         if (uri!=null) mMediaPlayer=MediaPlayer.create(this,uri);
         TextView musicName= (TextView)findViewById(R.id.musicname);
         Pattern p = Pattern.compile("[^/]+\\..+");
-        Matcher m=p.matcher("/mnt/sdcard/soundspread/clip/1456509955185.mp3");
+        Matcher m=p.matcher(musicname);
         if(m.find()==true)
         {
             musicName.setText(m.group().toString());

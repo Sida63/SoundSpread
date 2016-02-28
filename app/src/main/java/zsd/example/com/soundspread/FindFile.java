@@ -12,6 +12,9 @@ import android.widget.Toast;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class FindFile extends AppCompatActivity {
     private String[] items;
@@ -53,16 +56,24 @@ public class FindFile extends AppCompatActivity {
         Toast.makeText(FindFile.this, path, Toast.LENGTH_SHORT);
         File file=new File(path);
         File[] filelist =file.listFiles();
-        String []filename=new String[filelist.length];
+        List<String> filename=new ArrayList<String>();
         /*listItem = new ArrayList<HashMap<String, Object>>();
         for(int i=0;i<filelist.length;i++){
             HashMap<String, Object> map = new HashMap<String, Object>();
             map.put("filename",filelist[i].getName().toString());
             listItem.add(map);*/
         for(int i=0;i<filelist.length;i++){
-            filename[i]=filelist[i].getName().toString();
+            Pattern p = Pattern.compile(".+\\..+");
+            Matcher m=p.matcher(filelist[i].getName().toString());
+           if(m.find()==true)
+            {
+                filename.add(filelist[i].getName().toString());
+            }
+
         }
-        items=filename;
+        items=new String[filename.size()];
+        for(int i=0;i<filename.size();i++)
+        items[i]=filename.get(i).toString();
 
     }
 
