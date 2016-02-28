@@ -47,6 +47,10 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
         setContentView(R.layout.activity_main);
         mMediaPlayer=MediaPlayer.create(this, R.raw.happyis);//加载res/raw的happyis.mp3文件
         //Uri uri=Uri.parse("/mnt/sdcard/soundspread/happyis.mp3");
+        bookmarklist = new DataList();
+        bookmarkentity = new DataEntity();
+        bookmarkentity.setBookmarktime(0);
+        bookmarklist.additem(bookmarkentity);
         Uri uri=null;
         Intent intent=getIntent();
         if(intent.getExtras()!=null) {
@@ -85,7 +89,6 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
         mSoundProcessBar.setProgress(0);
         mSoundProcessBar.setMax(mMediaPlayer.getDuration());
         mSoundProcessBar.setOnSeekBarChangeListener(this);
-        bookmarklist = new DataList();
         final Handler handleProgress = new Handler() {
             public void handleMessage(Message msg) {
 
@@ -127,9 +130,11 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
                 bookmarkentity = new DataEntity();
                 int tempal=0;
                 tempal=mMediaPlayer.getCurrentPosition();
-                bookmarkentity.setBookmarktime(tempal);
-                bookmarklist.additem(bookmarkentity);
-                Toast.makeText(MainActivity.this,Integer.toString(tempal),Toast.LENGTH_SHORT).show();
+                if(tempal!=0) {
+                    bookmarkentity.setBookmarktime(tempal);
+                    bookmarklist.additem(bookmarkentity);
+                    Toast.makeText(MainActivity.this, Integer.toString(tempal), Toast.LENGTH_SHORT).show();
+                }
                 break;
             case R.id.checkbookmark:
                 Intent intent = new Intent();
