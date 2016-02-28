@@ -10,28 +10,47 @@
     tools:context="zsd.example.com.soundspread.MainMenu">
 
     <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="160dip"
+        android:layout_height="160dip"
         android:text="Choose File to Clip"
         android:id="@+id/choosefile"
+        android:background="@drawable/button3"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="106dp" />
+
+        android:layout_marginTop="60dp"
+        android:textColor="#ffffff" />
 
     <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="160dip"
+        android:layout_height="160dip"
         android:text="view my clips"
         android:id="@+id/viewclips"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true" />
+
+        android:background="@drawable/mainbutton2"
+        android:layout_alignTop="@+id/choosefile"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:textColor="#ffffff"
+        android:textColorHighlight="#ffffff" />
 
     <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="160dip"
+        android:layout_height="160dip"
         android:text="Download from Podcast"
         android:id="@+id/webbrowser"
-        android:layout_below="@+id/viewclips"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="66dp" />
+        android:layout_alignParentBottom="true"
+        android:textColor="#ffffff"
+        android:background="@drawable/mainmenubutton"
+        android:layout_marginBottom="60dp" />
+
+    <Button
+        android:layout_width="160dip"
+        android:layout_height="160dip"
+        android:text="About"
+        android:id="@+id/buttonabout"
+        android:background="@drawable/button4"
+        android:layout_alignTop="@+id/webbrowser"
+        android:textColor="#ffffff"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
 </RelativeLayout>

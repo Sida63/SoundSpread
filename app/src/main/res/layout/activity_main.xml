@@ -86,7 +86,7 @@
         android:id="@+id/Stop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="▆"
+        android:text="▄"
         android:layout_centerVertical="true"
         android:layout_toRightOf="@+id/Pause"
         android:layout_toEndOf="@+id/Pause" />
@@ -107,9 +107,11 @@
         android:id="@+id/buttonshare"
         android:layout_marginTop="34dp"
         android:layout_below="@+id/Pause"
+        android:background="@drawable/mainmenubutton"
         android:layout_toRightOf="@+id/Play"
         android:layout_toLeftOf="@+id/Stop"
         android:layout_toStartOf="@+id/Stop"
-        android:textSize="12dp"/>
+        android:textSize="12dp"
+        android:textColor="#ffffff" />
 
 </RelativeLayout>
