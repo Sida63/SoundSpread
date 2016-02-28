@@ -1,5 +1,7 @@
 package zsd.example.com.soundspread;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -9,8 +11,11 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
+
+import java.io.IOException;
 
 
 public class EditActivity extends AppCompatActivity {
@@ -34,13 +39,25 @@ public class EditActivity extends AppCompatActivity {
         clipaudio=(Button)findViewById(R.id.clipaudio);
         clipaudio.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                try {
-                    MP3File f = new MP3File(musicname);
-                    f.cut(firstbookmark, secondbookmark);
-                    Toast.makeText(EditActivity.this, "MP3 file is cut successfully", Toast.LENGTH_SHORT).show();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
+                final EditText et=new EditText(EditActivity.this);
+                new AlertDialog.Builder(EditActivity.this).setTitle("please input filename").setIcon(
+                        android.R.drawable.ic_dialog_info).setView(et)
+                        .setPositiveButton("OK",  new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog,
+                                                int which) {
+                                try {
+                                    MP3File f = new MP3File(musicname);
+                                    Toast.makeText(EditActivity.this,et.getText().toString(),Toast.LENGTH_SHORT).show();
+                                    f.cut(firstbookmark, secondbookmark, et.getText().toString());
+                                    Toast.makeText(EditActivity.this, "MP3 file is cut successfully", Toast.LENGTH_SHORT).show();
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
+                                }
+                            }
+                        })
+                        .setNegativeButton("Cancel", null).show();
+
             }
         });
         checkclipfile=(Button)findViewById(R.id.checkclipfile);

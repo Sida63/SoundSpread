@@ -65,7 +65,7 @@ public class MP3File {
      * @throws FileNotFoundException
      * @throws IOException
      */
-    public String cut(long start, long end) throws FileNotFoundException,
+    public String cut(long start, long end,String filename) throws FileNotFoundException,
             IOException {
         String path = file.getPath();
         //新文件的路径
@@ -73,7 +73,7 @@ public class MP3File {
         if(!filedir.exists())
             filedir.mkdir();
         String fileName = "/mnt/sdcard/soundspread/clip/"
-                + System.currentTimeMillis() + ".mp3";
+                + filename + ".mp3";
         FileInputStream fis = new FileInputStream(new File(path));
         //新文件的输出流
         FileOutputStream fos = new FileOutputStream(new File(fileName));
