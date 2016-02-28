@@ -25,4 +25,13 @@
         android:id="@+id/viewclips"
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Download from Podcast"
+        android:id="@+id/webbrowser"
+        android:layout_below="@+id/viewclips"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="66dp" />
 </RelativeLayout>

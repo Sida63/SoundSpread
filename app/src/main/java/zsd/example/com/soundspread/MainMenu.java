@@ -1,6 +1,7 @@
 package zsd.example.com.soundspread;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -18,6 +19,8 @@ public class MainMenu extends AppCompatActivity {
 
         Button viewClips = (Button) findViewById(R.id.viewclips);
         Button chooseFile = (Button) findViewById(R.id.choosefile);
+        Button webBrowser = (Button) findViewById(R.id.webbrowser);
+        webBrowser.setOnClickListener(new ButtonClickListener());
         viewClips.setOnClickListener(new ButtonClickListener());
         chooseFile.setOnClickListener(new ButtonClickListener());
 
@@ -32,7 +35,7 @@ public class MainMenu extends AppCompatActivity {
 
                 File file=new File(path);
                 File[] filelist =file.listFiles();
-                if (filelist.length>0) {
+                if (filelist.length>0 ) {
                     Intent intent = new Intent();
                     intent.setClass(MainMenu.this, ShowActivity.class);
                     startActivity(intent);
@@ -57,6 +60,14 @@ public class MainMenu extends AppCompatActivity {
                 {
                     Toast.makeText(MainMenu.this, "No file yet", Toast.LENGTH_SHORT);
                 }
+            }
+            if (v.getId() == R.id.webbrowser) {
+                Intent intent= new Intent();
+                intent.setAction("android.intent.action.VIEW");
+                String link="https://archive.org/details/MrMartiniEpisode01Introduction";
+                Uri contenturl = Uri.parse(link);
+                intent.setData(contenturl);
+                startActivity(intent);
             }
 
         }
