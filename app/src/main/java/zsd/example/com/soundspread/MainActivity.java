@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.content.Intent;
 import android.media.AudioManager;
@@ -54,7 +56,12 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
         }
         if (uri!=null) mMediaPlayer=MediaPlayer.create(this,uri);
         TextView musicName= (TextView)findViewById(R.id.musicname);
-        musicName.setText(musicname);
+        Pattern p = Pattern.compile("[^/]+\\..+");
+        Matcher m=p.matcher("/mnt/sdcard/soundspread/clip/1456509955185.mp3");
+        if(m.find()==true)
+        {
+            musicName.setText(m.group().toString());
+        }
         mAudioManager=(AudioManager)this.getSystemService(AUDIO_SERVICE);
         buttonShare=(Button)findViewById(R.id.buttonshare);
         mPlayButton=(Button)findViewById(R.id.Play);

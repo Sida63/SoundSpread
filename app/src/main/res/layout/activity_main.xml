@@ -27,7 +27,8 @@
         android:layout_alignParentTop="true"
         android:layout_toLeftOf="@+id/textView2"
         android:layout_toStartOf="@+id/textView2"
-        android:layout_marginTop="50dp" />
+        android:layout_marginTop="50dp"
+        android:textSize="12dp"/>
 
     <Button
         android:layout_width="wrap_content"
@@ -37,8 +38,9 @@
         android:layout_gravity="center_horizontal"
 
         android:layout_alignTop="@+id/bookmark"
-        android:layout_alignRight="@+id/Stop"
-        android:layout_alignEnd="@+id/Stop" />
+        android:layout_toRightOf="@+id/textView2"
+        android:layout_toEndOf="@+id/textView2"
+        android:textSize="12dp"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -77,8 +79,8 @@
         android:text="||"
 
         android:layout_alignTop="@+id/Stop"
-        android:layout_toRightOf="@+id/bookmark"
-        android:layout_toEndOf="@+id/bookmark" />
+        android:layout_alignLeft="@+id/textView2"
+        android:layout_alignStart="@+id/textView2" />
 
     <Button
         android:id="@+id/Stop"
@@ -95,15 +97,19 @@
         android:text="music name"
         android:id="@+id/musicname"
         android:layout_above="@+id/soundprocessseekBar"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:textStyle="bold"/>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Share"
         android:id="@+id/buttonshare"
-        android:layout_above="@+id/textView2"
-        android:layout_alignRight="@+id/musicname"
-        android:layout_alignEnd="@+id/musicname" />
+        android:layout_marginTop="34dp"
+        android:layout_below="@+id/Pause"
+        android:layout_toRightOf="@+id/Play"
+        android:layout_toLeftOf="@+id/Stop"
+        android:layout_toStartOf="@+id/Stop"
+        android:textSize="12dp"/>
 
 </RelativeLayout>
