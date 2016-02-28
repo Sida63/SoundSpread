@@ -2,6 +2,7 @@ package zsd.example.com.soundspread;
 
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -17,6 +18,7 @@ public class EditActivity extends AppCompatActivity {
     private Button checkclipfile;
     private Spinner spinner;
     private Spinner spinner1;
+    private String musicname;
     private long firstbookmark;
     private long secondbookmark;
     private DataList dataList;
@@ -24,11 +26,16 @@ public class EditActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit);
+        Intent intent=getIntent();
+        Bundle bundle = intent.getExtras();
+        musicname = (String) bundle.getSerializable("uri");
+        Uri uri= Uri.parse(musicname);
+        Toast.makeText(EditActivity.this, musicname, Toast.LENGTH_SHORT).show();
         clipaudio=(Button)findViewById(R.id.clipaudio);
         clipaudio.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 try {
-                    MP3File f = new MP3File("/mnt/sdcard/soundspread/happyis.mp3");
+                    MP3File f = new MP3File(musicname);
                     f.cut(firstbookmark, secondbookmark);
                     Toast.makeText(EditActivity.this, "MP3 file is cut successfully", Toast.LENGTH_SHORT).show();
                 } catch (Exception ex) {
@@ -45,8 +52,7 @@ public class EditActivity extends AppCompatActivity {
             }
         });
 
-        Intent intent=getIntent();
-        Bundle bundle = intent.getExtras();
+
         dataList=(DataList)bundle.getSerializable("datalist");
         Toast.makeText(EditActivity.this,Long.toString(dataList.getitem(0).getBookmarktime()),Toast.LENGTH_SHORT).show();
         spinner = (Spinner) findViewById(R.id.showbookmark);

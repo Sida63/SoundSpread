@@ -1,5 +1,6 @@
 package zsd.example.com.soundspread;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -17,11 +18,13 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity implements OnClickListener ,SeekBar.OnSeekBarChangeListener{
     private MediaPlayer mMediaPlayer=null;//媒体播放器
     private AudioManager mAudioManager=null;//声音管理器
+    private Button buttonShare=null;
     private Button mPlayButton=null;
     private Button mPauseButton=null;
     private Button mStopButton=null;
@@ -32,6 +35,7 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
     private Timer mTimer=new Timer();
     private int maxStreamVolume;//最大音量
     private int currentStreamVolume;//当前音量
+    private String musicname;
     //private int setStreamVolume;//设置的音量
     public DataEntity bookmarkentity;
     private DataList bookmarklist;
@@ -39,16 +43,20 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-       // mMediaPlayer=MediaPlayer.create(this, R.raw.happyis);//加载res/raw的happyis.mp3文件
-        Uri uri=Uri.parse("/mnt/sdcard/soundspread/happyis.mp3");
+        mMediaPlayer=MediaPlayer.create(this, R.raw.happyis);//加载res/raw的happyis.mp3文件
+        //Uri uri=Uri.parse("/mnt/sdcard/soundspread/happyis.mp3");
+        Uri uri=null;
         Intent intent=getIntent();
         if(intent.getExtras()!=null) {
             Bundle bundle = intent.getExtras();
-            String temp = (String) bundle.getSerializable("uri");
-            uri=Uri.parse(temp);
+            musicname = (String) bundle.getSerializable("uri");
+            uri=Uri.parse(musicname);
         }
-        mMediaPlayer=MediaPlayer.create(this,uri);
+        if (uri!=null) mMediaPlayer=MediaPlayer.create(this,uri);
+        TextView musicName= (TextView)findViewById(R.id.musicname);
+        musicName.setText(musicname);
         mAudioManager=(AudioManager)this.getSystemService(AUDIO_SERVICE);
+        buttonShare=(Button)findViewById(R.id.buttonshare);
         mPlayButton=(Button)findViewById(R.id.Play);
         mPauseButton=(Button)findViewById(R.id.Pause);
         mStopButton=(Button)findViewById(R.id.Stop);
@@ -61,6 +69,7 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
         mStopButton.setOnClickListener(this);
         addbookmark.setOnClickListener(this);
         checkbookmark.setOnClickListener(this);
+        buttonShare.setOnClickListener(this);
         maxStreamVolume=mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
         currentStreamVolume=mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
         mSoundSeekBar.setMax(maxStreamVolume);
@@ -120,8 +129,19 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
                 intent.setClass(MainActivity.this, EditActivity.class);
                 Bundle bundle = new Bundle();
                 bundle.putSerializable("datalist", bookmarklist);
+                bundle.putSerializable("uri", musicname);
                 intent.putExtras(bundle);
                 startActivity(intent);
+                break;
+            case R.id.buttonshare:
+                String sharePath=musicname;
+                //Uri uri = Uri.parse(sharePath);
+                Uri uri = Uri.fromFile(new File(sharePath));
+                Intent share = new Intent(Intent.ACTION_SEND);
+                share.setType("audio/*");
+                share.putExtra(Intent.EXTRA_STREAM, uri);
+                share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivity(Intent.createChooser(share, "Share Sound File"));
                 break;
             case R.id.Play:
                 mMediaPlayer.start();
