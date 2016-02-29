@@ -47,6 +47,8 @@ public class ShowActivity extends AppCompatActivity {
                 bundle.putSerializable("uri", "/mnt/sdcard/soundspread/clip/"+items[arg2]);
                 intent.putExtras(bundle);
                 startActivity(intent);
+                EditActivity.instance.finish();
+                MainActivity.instance.finish();
                 finish();
             }
 

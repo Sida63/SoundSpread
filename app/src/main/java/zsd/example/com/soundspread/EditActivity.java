@@ -27,6 +27,7 @@ public class EditActivity extends AppCompatActivity {
     private long firstbookmark;
     private long secondbookmark;
     private DataList dataList;
+    public static EditActivity instance = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -117,6 +118,7 @@ public class EditActivity extends AppCompatActivity {
         });
         spinner.setAdapter(adapter);
         spinner1.setAdapter(adapter);
+        instance = this;
 
 
     }

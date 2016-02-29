@@ -41,6 +41,7 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
     //private int setStreamVolume;//设置的音量
     public DataEntity bookmarkentity;
     private DataList bookmarklist;
+    public static MainActivity instance;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -113,6 +114,7 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
         };
 
         mTimer.schedule(mTimerTask, 0, 1000);
+        instance=this;
     }
 
     @Override
