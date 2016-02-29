@@ -7,36 +7,40 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="zsd.example.com.soundspread.Splash">
+    tools:context="zsd.example.com.soundspread.Splash"
+    android:background="#FFFFFF">
     <ImageView android:id="@+id/splashscreen" android:layout_width="wrap_content"
         android:layout_height="fill_parent"
         android:src="@drawable/podcast"
         android:layout_gravity="center"/>
 
+    <LinearLayout android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="67dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true">
     <TextView android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="SOUND"
+        android:layout_weight=".50"
         android:textStyle="bold"
         android:textColor="#f10002"
         android:textSize="30dp"
         android:id="@+id/textView3"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginLeft="58dp"
-        android:layout_marginStart="58dp" />
+        android:gravity="right"
+         />
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:layout_weight=".50"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="SPREAD"
         android:id="@+id/textView"
         android:textColor="#F10002"
         android:textSize="30dp"
-        android:layout_alignTop="@+id/textView3"
-        android:layout_alignRight="@+id/textView3"
-        android:layout_alignEnd="@+id/textView3"
-        android:layout_marginRight="58dp"
-        android:layout_marginEnd="58dp" />
+         />
+    </LinearLayout>
 </RelativeLayout>

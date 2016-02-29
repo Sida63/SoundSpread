@@ -35,7 +35,7 @@ public class EditActivity extends AppCompatActivity {
         Bundle bundle = intent.getExtras();
         musicname = (String) bundle.getSerializable("uri");
         Uri uri= Uri.parse(musicname);
-        Toast.makeText(EditActivity.this, musicname, Toast.LENGTH_SHORT).show();
+        //Toast.makeText(EditActivity.this, musicname, Toast.LENGTH_SHORT).show();
         clipaudio=(Button)findViewById(R.id.clipaudio);
         clipaudio.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -48,7 +48,7 @@ public class EditActivity extends AppCompatActivity {
                                                 int which) {
                                 try {
                                     MP3File f = new MP3File(musicname);
-                                    Toast.makeText(EditActivity.this,et.getText().toString(),Toast.LENGTH_SHORT).show();
+                                    //Toast.makeText(EditActivity.this,et.getText().toString(),Toast.LENGTH_SHORT).show();
                                     f.cut(firstbookmark, secondbookmark, et.getText().toString());
                                     Toast.makeText(EditActivity.this, "MP3 file is cut successfully", Toast.LENGTH_SHORT).show();
                                 } catch (Exception ex) {
@@ -71,13 +71,22 @@ public class EditActivity extends AppCompatActivity {
 
 
         dataList=(DataList)bundle.getSerializable("datalist");
-        Toast.makeText(EditActivity.this,Long.toString(dataList.getitem(0).getBookmarktime()),Toast.LENGTH_SHORT).show();
+        //Toast.makeText(EditActivity.this,Long.toString(dataList.getitem(0).getBookmarktime()),Toast.LENGTH_SHORT).show();
         spinner = (Spinner) findViewById(R.id.showbookmark);
         spinner1 = (Spinner) findViewById(R.id.shownextbookmark);
         String[] mItems=new String[dataList.size()];
+        int transtime,min,sec;
         for(int i=0;i<dataList.size();i++)
         {
-            mItems[i]=Long.toString(dataList.getitem(i).getBookmarktime());
+            transtime=dataList.getitem(i).getBookmarktime()/1000;
+            min = transtime/60;
+            sec = transtime%60;
+            if (sec<10) {
+                mItems[i]=Integer.toString(min)+":0"+Integer.toString(sec);
+            }else{
+                mItems[i]=Integer.toString(min)+":"+Integer.toString(sec);
+            }
+
         }
         ArrayAdapter<String> adapter=new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item, mItems);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -86,7 +95,7 @@ public class EditActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> parent, View view,
                                        int pos, long id) {
                 firstbookmark=dataList.getitem(pos).getBookmarktime();
-                Toast.makeText(EditActivity.this, Long.toString(firstbookmark), Toast.LENGTH_SHORT).show();
+               // Toast.makeText(EditActivity.this, Long.toString(firstbookmark), Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -99,7 +108,7 @@ public class EditActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> parent, View view,
                                        int pos, long id) {
                 secondbookmark=dataList.getitem(pos).getBookmarktime();
-                Toast.makeText(EditActivity.this,Long.toString(secondbookmark),Toast.LENGTH_SHORT).show();
+               // Toast.makeText(EditActivity.this,Long.toString(secondbookmark),Toast.LENGTH_SHORT).show();
             }
             @Override
             public void onNothingSelected(AdapterView<?> parent) {

@@ -133,7 +133,16 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
                 if(tempal!=0) {
                     bookmarkentity.setBookmarktime(tempal);
                     bookmarklist.additem(bookmarkentity);
-                    Toast.makeText(MainActivity.this, Integer.toString(tempal), Toast.LENGTH_SHORT).show();
+                    int transtime=tempal/1000;
+                    int min = transtime/60;
+                    int sec = transtime%60;
+                    String showtime;
+                    if (sec<10) {
+                        showtime=Integer.toString(min)+":0"+Integer.toString(sec);
+                    }else{
+                        showtime=Integer.toString(min)+":"+Integer.toString(sec);
+                    }
+                    Toast.makeText(MainActivity.this, showtime, Toast.LENGTH_SHORT).show();
                 }
                 break;
             case R.id.checkbookmark:
