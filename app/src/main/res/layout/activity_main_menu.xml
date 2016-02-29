@@ -9,7 +9,7 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="zsd.example.com.soundspread.MainMenu">
-    <LinearLayout android:layout_width="fill_parent"
+    <LinearLayout android:layout_width="fill_parent" android:layout_marginTop="20dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
     <Button
@@ -17,7 +17,7 @@
         android:layout_height="160dip"
         android:layout_weight=".50"
         android:text="Choose File to Clip"
-        android:textSize="10dp"
+        android:textSize="15dp"
         android:id="@+id/choosefile"
         android:background="@drawable/button3"
         android:layout_marginTop="60dp"
@@ -29,7 +29,7 @@
         android:layout_weight=".50"
         android:text="view my clips"
         android:id="@+id/viewclips"
-        android:textSize="10dp"
+        android:textSize="15dp"
         android:background="@drawable/mainbutton2"
         android:layout_marginTop="60dp"
         android:textColor="#ffffff"
@@ -42,9 +42,9 @@
         android:layout_width="fill_parent"
         android:layout_height="160dip"
         android:layout_weight="0.50"
-        android:text="Download from Podcast"
+        android:text="Download Podcast"
         android:id="@+id/webbrowser"
-        android:textSize="10dp"
+        android:textSize="15dp"
         android:textColor="#ffffff"
         android:background="@drawable/mainmenubutton"
         android:layout_marginBottom="60dp" />
@@ -54,7 +54,7 @@
         android:layout_height="160dip"
         android:layout_weight="0.50"
         android:text="About"
-        android:textSize="10dp"
+        android:textSize="15dp"
         android:id="@+id/buttonabout"
         android:background="@drawable/button4"
         android:textColor="#ffffff"
