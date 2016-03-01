@@ -2,12 +2,14 @@ package zsd.example.com.soundspread;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -27,6 +29,7 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
     private MediaPlayer mMediaPlayer=null;//媒体播放器
     private AudioManager mAudioManager=null;//声音管理器
     private Button buttonShare=null;
+    private Button buttonFace=null;
     private Button mPlayButton=null;
     private Button mPauseButton=null;
     private Button mStopButton=null;
@@ -69,6 +72,7 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
         }
         mAudioManager=(AudioManager)this.getSystemService(AUDIO_SERVICE);
         buttonShare=(Button)findViewById(R.id.buttonshare);
+       // buttonFace=(Button)findViewById(R.id.facebook);
         mPlayButton=(Button)findViewById(R.id.Play);
         mPauseButton=(Button)findViewById(R.id.Pause);
         mStopButton=(Button)findViewById(R.id.Stop);
@@ -76,6 +80,7 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
         checkbookmark=(Button)findViewById(R.id.checkbookmark);
         mSoundSeekBar=(SeekBar)findViewById(R.id.SoundSeekBar);
         mSoundProcessBar=(SeekBar)findViewById(R.id.soundprocessseekBar);
+       // buttonFace.setOnClickListener(this);
         mPlayButton.setOnClickListener(this);
         mPauseButton.setOnClickListener(this);
         mStopButton.setOnClickListener(this);
@@ -166,6 +171,34 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
                 share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 startActivity(Intent.createChooser(share, "Share Sound File"));
                 break;
+            /*
+            case R.id.facebook:
+                String urlToShare = "http://stackoverflow.com/questions/7545254";
+                Intent facebookit = new Intent(Intent.ACTION_SEND);
+                facebookit.setType("text/plain");
+// intent.putExtra(Intent.EXTRA_SUBJECT, "Foo bar"); // NB: has no effect!
+                facebookit.putExtra(Intent.EXTRA_TEXT, urlToShare);
+
+// See if official Facebook app is found
+                boolean facebookAppFound = false;
+                List<ResolveInfo> matches = getPackageManager().queryIntentActivities(facebookit, 0);
+                for (ResolveInfo info : matches) {
+                    if (info.activityInfo.packageName.toLowerCase().startsWith("com.facebook.katana")) {
+                        facebookit.setPackage(info.activityInfo.packageName);
+                        facebookAppFound = true;
+                        break;
+                    }
+                }
+
+// As fallback, launch sharer.php in a browser
+                if (!facebookAppFound) {
+                    String sharerUrl = "https://www.facebook.com/sharer/sharer.php?u=" + urlToShare;
+                    facebookit = new Intent(Intent.ACTION_VIEW, Uri.parse(sharerUrl));
+                }
+
+                startActivity(facebookit);
+                break;
+                */
             case R.id.Play:
                 mMediaPlayer.start();
                 break;

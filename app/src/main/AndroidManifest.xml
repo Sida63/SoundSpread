@@ -15,17 +15,23 @@
         android:theme="@style/AppTheme"
         android:supportsRtl="true"
         >
-        <activity android:name=".MainActivity"></activity>
-        <activity android:name=".EditActivity" />
-        <activity android:name=".ShowActivity" />
-        <activity android:name=".ShareActivity" />
-        <activity android:name=".MainMenu">
+        <activity android:name=".MainActivity"
+            android:screenOrientation="portrait"></activity>
+        <activity android:name=".EditActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".ShowActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".ShareActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".MainMenu"
+            android:screenOrientation="portrait">
 
         </activity>
-        <activity android:name=".FindFile" />
+        <activity android:name=".FindFile"
+            android:screenOrientation="portrait"/>
         <activity android:name=".Splash"
             android:theme="@style/Theme.AppCompat.NoActionBar"
-
+            android:screenOrientation="portrait"
             >
 
             <intent-filter>
