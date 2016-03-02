@@ -149,7 +149,7 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
                     }else{
                         showtime=Integer.toString(min)+":"+Integer.toString(sec);
                     }
-                    Toast.makeText(MainActivity.this, showtime, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Added bookmark at "+showtime, Toast.LENGTH_SHORT).show();
                 }
                 break;
             case R.id.checkbookmark:
@@ -216,6 +216,7 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
                     e.printStackTrace();
                 }
                 mMediaPlayer.seekTo(0);
+                mSoundProcessBar.setProgress(0);
                 break;
             default:
                 break;
