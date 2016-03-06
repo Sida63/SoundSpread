@@ -12,6 +12,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.audiofx.Visualizer;
@@ -24,6 +25,7 @@ import android.support.v4.app.ActivityCompat;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -45,6 +47,13 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
     private int maxStreamVolume;//最大音量
     private int currentStreamVolume;//当前音量
     private String musicname;
+    private TextView starttime;
+    private TextView finishtime;
+    private TextView textbar;
+    private TextMoveLayout textMoveLayout;
+    private ViewGroup.LayoutParams layoutParams;
+    private int screenWidth;
+    private float moveStep = 0;
     //private int setStreamVolume;//设置的音量
     public DataEntity bookmarkentity;
     private DataList bookmarklist;
@@ -76,7 +85,7 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
         }
         if (uri!=null) mMediaPlayer=MediaPlayer.create(this,uri);
         TextView musicName= (TextView)findViewById(R.id.musicname);
-         Pattern p = Pattern.compile("[^/]+\\..+");
+        Pattern p = Pattern.compile("[^/]+\\..+");
         Matcher m=p.matcher(musicname);
         if(m.find()==true)
         {
@@ -94,7 +103,41 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
         mSoundSeekBar=(SeekBar)findViewById(R.id.SoundSeekBar);
         mSoundProcessBar=(SeekBar)findViewById(R.id.soundprocessseekBar);
         mVisualizerView = (VisualizerView) findViewById(R.id.myvisualizerview);
-
+        starttime=(TextView)findViewById(R.id.starttime);
+        finishtime=(TextView)findViewById(R.id.finishtime);
+        starttime.setText("00:00:00");
+        int hour=mMediaPlayer.getDuration()/(1000*60*60);
+        int minute=(mMediaPlayer.getDuration()%(1000*60*60))/(1000*60);
+        int second=((mMediaPlayer.getDuration()%(1000*60*60))%(1000*60))/1000;
+        String temp=" ";
+        if(hour<10&&minute<10&&second<10)
+            temp="0"+Integer.toString(hour)+":"+"0"+Integer.toString(minute)+":"+"0"+Integer.toString(second);
+        else if(hour<10&&minute<10&&second>10)
+            temp="0"+Integer.toString(hour)+":"+"0"+Integer.toString(minute)+":"+Integer.toString(second);
+        else if(hour<10&&minute>10&&second<10)
+            temp="0"+Integer.toString(hour)+":"+Integer.toString(minute)+":"+"0"+Integer.toString(second);
+        else if(hour<10&&minute>10&&second>10)
+            temp="0"+Integer.toString(hour)+":"+Integer.toString(minute)+":"+Integer.toString(second);
+        else if(hour>10&&minute<10&&second<10)
+            temp=Integer.toString(hour)+":"+"0"+Integer.toString(minute)+":"+"0"+Integer.toString(second);
+        else if(hour>10&&minute<10&&second>10)
+            temp=Integer.toString(hour)+":"+"0"+Integer.toString(minute)+":"+Integer.toString(second);
+        else if(hour>10&&minute>10&&second<10)
+            temp=Integer.toString(hour)+":"+Integer.toString(minute)+":"+"0"+Integer.toString(second);
+        else if(hour>10&&minute>10&&second>10)
+            temp=Integer.toString(hour)+":"+Integer.toString(minute)+":"+Integer.toString(second);
+        finishtime.setText(temp);
+        textbar = new TextView(this);
+        textbar.setBackgroundColor(Color.rgb(245, 245, 245));
+        textbar.setTextColor(Color.rgb(0, 161, 229));
+        textbar.setTextSize(16);
+        moveStep = (float) (((float) screenWidth / (float) mMediaPlayer.getDuration()/1000) * 0.8);
+        screenWidth=getWindowManager().getDefaultDisplay().getWidth();
+        layoutParams = new ViewGroup.LayoutParams(screenWidth, 50);
+        textMoveLayout = (TextMoveLayout) findViewById(R.id.textLayout);
+        textMoveLayout.addView(textbar, layoutParams);
+        textbar.layout(0, 20, screenWidth, 80);
+        textbar.setText("00:00:00");
        // buttonFace.setOnClickListener(this);
         mPlayButton.setOnClickListener(this);
         mPauseButton.setOnClickListener(this);
@@ -268,6 +311,28 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
                mMediaPlayer.seekTo(progress);
                mSoundProcessBar.setProgress(progress);
            }
+           textbar.layout((int) (progress * moveStep), 20, screenWidth, 80);
+           int hour=mMediaPlayer.getCurrentPosition()/(1000*60*60);
+           int minute=(mMediaPlayer.getCurrentPosition()%(1000*60*60))/(1000*60);
+           int second=((mMediaPlayer.getCurrentPosition()%(1000*60*60))%(1000*60))/1000;
+           String temp=" ";
+           if(hour<10&&minute<10&&second<10)
+               temp="0"+Integer.toString(hour)+":"+"0"+Integer.toString(minute)+":"+"0"+Integer.toString(second);
+           else if(hour<10&&minute<10&&second>10)
+               temp="0"+Integer.toString(hour)+":"+"0"+Integer.toString(minute)+":"+Integer.toString(second);
+           else if(hour<10&&minute>10&&second<10)
+               temp="0"+Integer.toString(hour)+":"+Integer.toString(minute)+":"+"0"+Integer.toString(second);
+           else if(hour<10&&minute>10&&second>10)
+               temp="0"+Integer.toString(hour)+":"+Integer.toString(minute)+":"+Integer.toString(second);
+           else if(hour>10&&minute<10&&second<10)
+               temp=Integer.toString(hour)+":"+"0"+Integer.toString(minute)+":"+"0"+Integer.toString(second);
+           else if(hour>10&&minute<10&&second>10)
+               temp=Integer.toString(hour)+":"+"0"+Integer.toString(minute)+":"+Integer.toString(second);
+           else if(hour>10&&minute>10&&second<10)
+               temp=Integer.toString(hour)+":"+Integer.toString(minute)+":"+"0"+Integer.toString(second);
+           else if(hour>10&&minute>10&&second>10)
+               temp=Integer.toString(hour)+":"+Integer.toString(minute)+":"+Integer.toString(second);
+           textbar.setText(temp);
           /* double position = mMediaPlayer.getCurrentPosition();
            double duration = mMediaPlayer.getDuration();
 
