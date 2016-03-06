@@ -58,7 +58,7 @@ public class MainMenu extends AppCompatActivity {
                 }
                 else
                 {
-                    Toast.makeText(MainMenu.this, "No file yet", Toast.LENGTH_SHORT);
+                    Toast.makeText(MainMenu.this, "No file yet", Toast.LENGTH_SHORT).show();
                 }
             }
             if (v.getId() == R.id.webbrowser) {

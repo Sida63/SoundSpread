@@ -8,15 +8,19 @@ import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.audiofx.Visualizer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Activity;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.app.ActivityCompat;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -44,11 +48,19 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
     //private int setStreamVolume;//设置的音量
     public DataEntity bookmarkentity;
     private DataList bookmarklist;
+    private Visualizer mVisualizer;
+    private VisualizerView mVisualizerView;
+    private Thread thread;
     public static MainActivity instance;
+    private static final int REQUEST_EXTERNAL_STORAGE = 0;
+    private static String[] PERMISSIONS_STORAGE = {
+            Manifest.permission.RECORD_AUDIO,
+    };
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        verifyStoragePermissions(MainActivity.this);
         mMediaPlayer=MediaPlayer.create(this, R.raw.happyis);//加载res/raw的happyis.mp3文件
         //Uri uri=Uri.parse("/mnt/sdcard/soundspread/happyis.mp3");
         bookmarklist = new DataList();
@@ -64,13 +76,14 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
         }
         if (uri!=null) mMediaPlayer=MediaPlayer.create(this,uri);
         TextView musicName= (TextView)findViewById(R.id.musicname);
-        Pattern p = Pattern.compile("[^/]+\\..+");
+         Pattern p = Pattern.compile("[^/]+\\..+");
         Matcher m=p.matcher(musicname);
         if(m.find()==true)
         {
             musicName.setText(m.group().toString());
         }
-        mAudioManager=(AudioManager)this.getSystemService(AUDIO_SERVICE);
+
+        mAudioManager = (AudioManager)this.getSystemService(AUDIO_SERVICE);
         buttonShare=(Button)findViewById(R.id.buttonshare);
        // buttonFace=(Button)findViewById(R.id.facebook);
         mPlayButton=(Button)findViewById(R.id.Play);
@@ -80,6 +93,8 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
         checkbookmark=(Button)findViewById(R.id.checkbookmark);
         mSoundSeekBar=(SeekBar)findViewById(R.id.SoundSeekBar);
         mSoundProcessBar=(SeekBar)findViewById(R.id.soundprocessseekBar);
+        mVisualizerView = (VisualizerView) findViewById(R.id.myvisualizerview);
+
        // buttonFace.setOnClickListener(this);
         mPlayButton.setOnClickListener(this);
         mPauseButton.setOnClickListener(this);
@@ -117,6 +132,18 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
                 }
             }
         };
+        thread=new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+
+                setupVisualizerFxAndUI();
+                mVisualizer.setEnabled(true);
+
+            }
+        });
+        thread.start();
 
         mTimer.schedule(mTimerTask, 0, 1000);
         instance=this;
@@ -282,5 +309,35 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
             mMediaPlayer.release();
         }
         super.onBackPressed();
+    }
+
+    private void setupVisualizerFxAndUI() {
+
+        // Create the Visualizer object and attach it to our media player.
+        mVisualizer = new Visualizer(mMediaPlayer.getAudioSessionId());
+        mVisualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[1]);
+        mVisualizer.setDataCaptureListener(
+                new Visualizer.OnDataCaptureListener() {
+                    public void onWaveFormDataCapture(Visualizer visualizer,
+                                                      byte[] bytes, int samplingRate) {
+                        mVisualizerView.updateVisualizer(bytes);
+                    }
+
+                    public void onFftDataCapture(Visualizer visualizer,
+                                                 byte[] bytes, int samplingRate) {
+                        // mVisualizerView.updateVisualizer(bytes);
+                    }
+                }, Visualizer.getMaxCaptureRate() / 2, true, false);
+    }
+    public static void verifyStoragePermissions(Activity activity) {
+        int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.RECORD_AUDIO);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                    activity,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
     }
 }
