@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -15,10 +16,12 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
 
 
-public class EditActivity extends AppCompatActivity {
+public class EditActivity extends AppCompatActivity implements MarkerView.MarkerListener,
+        WaveformView.WaveformListener{
     private Button clipaudio;
     private Button checkclipfile;
     private Spinner spinner;
@@ -26,12 +29,56 @@ public class EditActivity extends AppCompatActivity {
     private String musicname;
     private long firstbookmark;
     private long secondbookmark;
+
+    private WaveformView mWaveformView;
+    private MarkerView mStartMarker;
+    private MarkerView mEndMarker;
     private DataList dataList;
+    private File mFile;
+    private String mFilename;
+    private SoundFile mSoundFile;
+    private long mLoadingLastUpdateTime;
     public static EditActivity instance = null;
+    private float mDensity;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit);
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        mDensity = metrics.density;
+        mLoadingLastUpdateTime = getCurrentTime();
+        mFilename="/mnt/soundspread/test1.mp3";
+        mFile = new File(mFilename);
+        try {
+            mSoundFile = SoundFile.create("/mnt/sdcard/soundspread/Sponge bob.mp3");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SoundFile.InvalidInputException e) {
+            e.printStackTrace();
+        }
+        mWaveformView = (WaveformView)findViewById(R.id.waveform);
+        mWaveformView.setListener(this);
+        if (mSoundFile != null && !mWaveformView.hasSoundFile()) {
+            Toast.makeText(EditActivity.this,"input",Toast.LENGTH_SHORT).show();
+            mWaveformView.setSoundFile(mSoundFile);
+            mWaveformView.recomputeHeights(mDensity);
+        }
+        else
+        {
+            Toast.makeText(EditActivity.this,"aout",Toast.LENGTH_SHORT).show();
+        }
+        mStartMarker = (MarkerView)findViewById(R.id.startmarker);
+        mStartMarker.setListener(this);
+        mStartMarker.setAlpha(1f);
+        mStartMarker.setFocusable(true);
+        mStartMarker.setFocusableInTouchMode(true);
+
+        mEndMarker = (MarkerView)findViewById(R.id.endmarker);
+        mEndMarker.setListener(this);
+        mEndMarker.setAlpha(1f);
+        mEndMarker.setFocusable(true);
+        mEndMarker.setFocusableInTouchMode(true);
         Intent intent=getIntent();
         Bundle bundle = intent.getExtras();
         musicname = (String) bundle.getSerializable("uri");
@@ -122,6 +169,86 @@ public class EditActivity extends AppCompatActivity {
 
 
     }
+
+    @Override
+    public void markerTouchStart(MarkerView marker, float pos) {
+
+    }
+
+    @Override
+    public void markerTouchMove(MarkerView marker, float pos) {
+
+    }
+
+    @Override
+    public void markerTouchEnd(MarkerView marker) {
+
+    }
+
+    @Override
+    public void markerFocus(MarkerView marker) {
+
+    }
+
+    @Override
+    public void markerLeft(MarkerView marker, int velocity) {
+
+    }
+
+    @Override
+    public void markerRight(MarkerView marker, int velocity) {
+
+    }
+
+    @Override
+    public void markerEnter(MarkerView marker) {
+
+    }
+
+    @Override
+    public void markerKeyUp() {
+
+    }
+
+    @Override
+    public void markerDraw() {
+
+    }
+
+    @Override
+    public void waveformTouchStart(float x) {
+
+    }
+
+    @Override
+    public void waveformTouchMove(float x) {
+
+    }
+
+    @Override
+    public void waveformTouchEnd() {
+
+    }
+
+    @Override
+    public void waveformFling(float x) {
+
+    }
+
+    @Override
+    public void waveformDraw() {
+
+    }
+
+    @Override
+    public void waveformZoomIn() {
+
+    }
+
+    @Override
+    public void waveformZoomOut() {
+
+    }
    /* public void onItemSelected(AdapterView<?> parent,
                                View v, int position, long id) {
         switch(v.getId())
@@ -138,4 +265,7 @@ public class EditActivity extends AppCompatActivity {
                 break;
         }
     }*/
+   private long getCurrentTime() {
+       return System.nanoTime() / 1000000;
+   }
 }
