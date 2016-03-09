@@ -1,9 +1,12 @@
 package zsd.example.com.soundspread;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -13,10 +16,12 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 
@@ -29,6 +34,12 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     private String musicname;
     private long firstbookmark;
     private long secondbookmark;
+
+    private boolean mIsPlaying;
+    private ImageButton mPlayButton;
+    private ImageButton mRewindButton;
+    private ImageButton mFfwdButton;
+    private MediaPlayer mPlayer;
 
     private WaveformView mWaveformView;
     private MarkerView mStartMarker;
@@ -44,12 +55,17 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit);
+
+
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         mDensity = metrics.density;
         mLoadingLastUpdateTime = getCurrentTime();
-        mFilename="/mnt/soundspread/test1.mp3";
+        mFilename="/mnt/sdcard/soundspread/Sponge bob.mp3";
         mFile = new File(mFilename);
+
+        loadplayer();
+
         try {
             mSoundFile = SoundFile.create("/mnt/sdcard/soundspread/Sponge bob.mp3");
         } catch (IOException e) {
@@ -84,6 +100,8 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         musicname = (String) bundle.getSerializable("uri");
         Uri uri= Uri.parse(musicname);
         //Toast.makeText(EditActivity.this, musicname, Toast.LENGTH_SHORT).show();
+
+
         clipaudio=(Button)findViewById(R.id.clipaudio);
         clipaudio.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -168,6 +186,165 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         instance = this;
 
 
+    }
+
+    private void loadplayer() {
+        mPlayer = null;
+        mIsPlaying = false;
+        mPlayButton = (ImageButton)findViewById(R.id.play);
+        mPlayButton.setOnClickListener(mPlayListener);
+        mRewindButton = (ImageButton)findViewById(R.id.rew);
+        mRewindButton.setOnClickListener(mRewindListener);
+        mFfwdButton = (ImageButton)findViewById(R.id.ffwd);
+        mFfwdButton.setOnClickListener(mFfwdListener);
+        new Thread() {
+            public void run() {
+            //    mCanSeekAccurately = SeekTest.CanSeekAccurately(
+            //            getPreferences(Context.MODE_PRIVATE));
+
+            //    System.out.println("Seek test done, creating media player.");
+                try {
+                    MediaPlayer player = new MediaPlayer();
+                    player.setDataSource(mFile.getAbsolutePath());
+                    player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                    player.prepare();
+                    mPlayer = player;
+                } catch (final java.io.IOException e) {
+                    /*Runnable runnable = new Runnable() {
+                        public void run() {
+                            handleFatalError(
+                                    "ReadError",
+                                    getResources().getText(R.string.read_error),
+                                    e);
+                        }
+                    };
+                    mHandler.post(runnable);
+                    */
+                };
+            }
+        }.start();
+    }
+
+    private synchronized void handlePause() {
+        if (mPlayer != null && mPlayer.isPlaying()) {
+            mPlayer.pause();
+        }
+        mWaveformView.setPlayback(-1);
+        mIsPlaying = false;
+        enableDisableButtons();
+    }
+
+    private synchronized void onPlay(int startPosition) {
+        if (mIsPlaying) {
+            handlePause();
+            return;
+        }
+
+        if (mPlayer == null) {
+            // Not initialized yet
+            return;
+        }
+
+        try {
+            mPlayStartMsec = mWaveformView.pixelsToMillisecs(startPosition);
+            if (startPosition < mStartPos) {
+                mPlayEndMsec = mWaveformView.pixelsToMillisecs(mStartPos);
+            } else if (startPosition > mEndPos) {
+                mPlayEndMsec = mWaveformView.pixelsToMillisecs(mMaxPos);
+            } else {
+                mPlayEndMsec = mWaveformView.pixelsToMillisecs(mEndPos);
+            }
+
+            mPlayStartOffset = 0;
+
+            int startFrame = mWaveformView.secondsToFrames(
+                    mPlayStartMsec * 0.001);
+            int endFrame = mWaveformView.secondsToFrames(
+                    mPlayEndMsec * 0.001);
+            int startByte = mSoundFile.getSeekableFrameOffset(startFrame);
+            int endByte = mSoundFile.getSeekableFrameOffset(endFrame);
+            if (mCanSeekAccurately && startByte >= 0 && endByte >= 0) {
+                try {
+                    mPlayer.reset();
+                    mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                    FileInputStream subsetInputStream = new FileInputStream(
+                            mFile.getAbsolutePath());
+                    mPlayer.setDataSource(subsetInputStream.getFD(),
+                            startByte, endByte - startByte);
+                    mPlayer.prepare();
+                    mPlayStartOffset = mPlayStartMsec;
+                } catch (Exception e) {
+                    System.out.println("Exception trying to play file subset");
+                    mPlayer.reset();
+                    mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                    mPlayer.setDataSource(mFile.getAbsolutePath());
+                    mPlayer.prepare();
+                    mPlayStartOffset = 0;
+                }
+            }
+
+            mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                public synchronized void onCompletion(MediaPlayer arg0) {
+                    handlePause();
+                }
+            });
+            mIsPlaying = true;
+
+            if (mPlayStartOffset == 0) {
+                mPlayer.seekTo(mPlayStartMsec);
+            }
+            mPlayer.start();
+            updateDisplay();
+            enableDisableButtons();
+        } catch (Exception e) {
+            showFinalAlert(e, R.string.play_error);
+            return;
+        }
+    }
+
+    private View.OnClickListener mPlayListener = new View.OnClickListener() {
+        public void onClick(View sender) {
+            onPlay(mStartPos);
+        }
+    };
+
+    private View.OnClickListener mRewindListener = new View.OnClickListener() {
+        public void onClick(View sender) {
+            if (mIsPlaying) {
+                int newPos = mPlayer.getCurrentPosition() - 5000;
+                if (newPos < mPlayStartMsec)
+                    newPos = mPlayStartMsec;
+                mPlayer.seekTo(newPos);
+            } else {
+                mStartMarker.requestFocus();
+                markerFocus(mStartMarker);
+            }
+        }
+    };
+
+    private View.OnClickListener mFfwdListener = new View.OnClickListener() {
+        public void onClick(View sender) {
+            if (mIsPlaying) {
+                int newPos = 5000 + mPlayer.getCurrentPosition();
+                if (newPos > mPlayEndMsec)
+                    newPos = mPlayEndMsec;
+                mPlayer.seekTo(newPos);
+            } else {
+                mEndMarker.requestFocus();
+                markerFocus(mEndMarker);
+            }
+        }
+    };
+
+
+    private void enableDisableButtons() {
+        if (mIsPlaying) {
+            mPlayButton.setImageResource(android.R.drawable.ic_media_pause);
+            mPlayButton.setContentDescription("Stop");
+        } else {
+            mPlayButton.setImageResource(android.R.drawable.ic_media_play);
+            mPlayButton.setContentDescription("Pause");
+        }
     }
 
     @Override

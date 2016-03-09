@@ -38,69 +38,74 @@
             android:contentDescription="@string/end_marker" />
 
     </RelativeLayout>
+
+    <LinearLayout
+        style="@style/ToolbarBackground"
+        android:layout_width="fill_parent"
+        android:layout_height="62dip"
+        android:gravity="center" >
+
+        <ImageButton android:id="@+id/rew"
+            android:layout_width="64dip"
+            android:layout_height="52dip"
+            android:layout_marginTop="6dip"
+            android:layout_marginBottom="6dip"
+            style="@android:style/MediaButton"
+            android:contentDescription="rewind"
+            android:src="@android:drawable/ic_media_previous" />
+
+        <ImageButton android:id="@+id/play"
+            android:layout_width="71dip"
+            android:layout_height="52dip"
+            android:layout_marginTop="6dip"
+            android:layout_marginBottom="6dip"
+            style="@android:style/MediaButton"
+            android:contentDescription="play"
+            android:src="@android:drawable/ic_media_play" />
+
+        <ImageButton android:id="@+id/ffwd"
+            android:layout_width="64dip"
+            android:layout_height="52dip"
+            android:layout_marginRight="5dip"
+            android:layout_marginTop="6dip"
+            android:layout_marginBottom="6dip"
+            style="@android:style/MediaButton"
+            android:contentDescription="ffwd"
+            android:src="@android:drawable/ic_media_next" />
+
+    </LinearLayout>
+
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="fill_parent"
         android:layout_weight="0.5">
-    <Spinner
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/showbookmark"
-        android:layout_alignParentStart="true"
-        android:layout_above="@+id/textView5"
-        android:layout_alignParentLeft="true" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Clip"
-        android:id="@+id/clipaudio"
-        android:layout_marginLeft="29dp"
-        android:layout_marginStart="29dp"
-        android:layout_marginBottom="36dp"
-        android:layout_alignParentBottom="true"
-        android:layout_toRightOf="@+id/textView5"
-        android:layout_toEndOf="@+id/textView5" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="View Clip File"
         android:id="@+id/checkclipfile"
-        android:layout_alignBaseline="@+id/clipaudio"
-        android:layout_alignBottom="@+id/clipaudio"
-        android:layout_toRightOf="@+id/clipaudio"
-        android:layout_toEndOf="@+id/clipaudio"
-        android:layout_marginLeft="30dp"
-        android:layout_marginStart="30dp" />
 
-    <Spinner
+        android:layout_gravity="right"
+        android:layout_alignTop="@+id/clipaudio"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="27dp"
+        android:layout_marginEnd="27dp" />
+
+    <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/shownextbookmark"
-        android:layout_alignParentStart="true"
-        android:layout_above="@+id/showbookmark"
-        android:layout_alignParentLeft="true" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Clip From:"
-        android:id="@+id/textView4"
-        android:textColor="#000000"
-        android:layout_above="@+id/clipaudio"
+        android:text="Clip"
+        android:id="@+id/clipaudio"
+        android:layout_marginBottom="15dp"
+        android:layout_marginLeft="49dp"
+        android:layout_marginStart="49dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
+    </RelativeLayout>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="To:"
-        android:id="@+id/textView5"
-        android:textColor="#000000"
-        android:layout_alignParentStart="true"
-        android:layout_above="@+id/textView4"
-        android:layout_alignParentLeft="true" />
-        </RelativeLayout>
+
 </LinearLayout>
