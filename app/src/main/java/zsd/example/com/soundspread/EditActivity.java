@@ -39,15 +39,9 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     private long firstbookmark;
     private long secondbookmark;
 
-    private boolean mIsPlaying;
-    private ImageButton mPlayButton;
-    private ImageButton mRewindButton;
-    private ImageButton mFfwdButton;
-    private MediaPlayer mPlayer;
 
-    private WaveformView mWaveformView;
-    private MarkerView mStartMarker;
-    private MarkerView mEndMarker;
+    private SamplePlayer mPlayer;
+
 
     private DataList dataList;
     public static EditActivity instance = null;
@@ -135,7 +129,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         mFilename=musicname;
         mFile = new File(mFilename);
 
-        loadplayer();
+
 
         try {
            // mSoundFile = SoundFile.create("/mnt/sdcard/soundspread/Sponge bob.mp3");
@@ -158,6 +152,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         {
             Toast.makeText(EditActivity.this,"aout",Toast.LENGTH_SHORT).show();
         }
+        loadplayer();
         mStartMarker = (MarkerView)findViewById(R.id.startmarker);
         mStartMarker.setListener(this);
         mStartMarker.setAlpha(1f);
@@ -209,6 +204,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
 
         dataList=(DataList)bundle.getSerializable("datalist");
         //Toast.makeText(EditActivity.this,Long.toString(dataList.getitem(0).getBookmarktime()),Toast.LENGTH_SHORT).show();
+        /*
         spinner = (Spinner) findViewById(R.id.showbookmark);
         spinner1 = (Spinner) findViewById(R.id.shownextbookmark);
         String[] mItems=new String[dataList.size()];
@@ -254,11 +250,15 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         });
         spinner.setAdapter(adapter);
         spinner1.setAdapter(adapter);
+        */
+
         updateDisplay();
         instance = this;
 
 
     }
+
+
 
     private void loadplayer() {
         mPlayer = null;
@@ -269,6 +269,8 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         mRewindButton.setOnClickListener(mRewindListener);
         mFfwdButton = (ImageButton)findViewById(R.id.ffwd);
         mFfwdButton.setOnClickListener(mFfwdListener);
+        resetPositions();
+
         new Thread() {
             public void run() {
             //    mCanSeekAccurately = SeekTest.CanSeekAccurately(
@@ -276,25 +278,14 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
 
             //    System.out.println("Seek test done, creating media player.");
                 try {
-                    MediaPlayer player = new MediaPlayer();
-                    player.setDataSource(mFile.getAbsolutePath());
-                    player.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                    player.prepare();
-                    mPlayer = player;
-                } catch (final java.io.IOException e) {
-                    /*Runnable runnable = new Runnable() {
-                        public void run() {
-                            handleFatalError(
-                                    "ReadError",
-                                    getResources().getText(R.string.read_error),
-                                    e);
-                        }
-                    };
-                    mHandler.post(runnable);
-                    */
+                    mPlayer = new SamplePlayer(mSoundFile);
+                } catch (final Exception e) {
+
+                    e.printStackTrace();
                 };
             }
         }.start();
+
     }
 
     private synchronized void handlePause() {
@@ -318,6 +309,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         }
 
         try {
+            Toast.makeText(EditActivity.this,Integer.toString(startPosition),Toast.LENGTH_SHORT).show();
             mPlayStartMsec = mWaveformView.pixelsToMillisecs(startPosition);
             if (startPosition < mStartPos) {
                 mPlayEndMsec = mWaveformView.pixelsToMillisecs(mStartPos);
@@ -326,50 +318,20 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             } else {
                 mPlayEndMsec = mWaveformView.pixelsToMillisecs(mEndPos);
             }
-
-            mPlayStartOffset = 0;
-
-            int startFrame = mWaveformView.secondsToFrames(
-                    mPlayStartMsec * 0.001);
-            int endFrame = mWaveformView.secondsToFrames(
-                    mPlayEndMsec * 0.001);
-            int startByte = mSoundFile.getSeekableFrameOffset(startFrame);
-            int endByte = mSoundFile.getSeekableFrameOffset(endFrame);
-            if (mCanSeekAccurately && startByte >= 0 && endByte >= 0) {
-                try {
-                    mPlayer.reset();
-                    mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                    FileInputStream subsetInputStream = new FileInputStream(
-                            mFile.getAbsolutePath());
-                    mPlayer.setDataSource(subsetInputStream.getFD(),
-                            startByte, endByte - startByte);
-                    mPlayer.prepare();
-                    mPlayStartOffset = mPlayStartMsec;
-                } catch (Exception e) {
-                    System.out.println("Exception trying to play file subset");
-                    mPlayer.reset();
-                    mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                    mPlayer.setDataSource(mFile.getAbsolutePath());
-                    mPlayer.prepare();
-                    mPlayStartOffset = 0;
-                }
-            }
-
-            mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                public synchronized void onCompletion(MediaPlayer arg0) {
+            mPlayer.setOnCompletionListener(new SamplePlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion() {
                     handlePause();
                 }
             });
             mIsPlaying = true;
 
-            if (mPlayStartOffset == 0) {
-                mPlayer.seekTo(mPlayStartMsec);
-            }
+            mPlayer.seekTo(mPlayStartMsec);
             mPlayer.start();
             updateDisplay();
             enableDisableButtons();
         } catch (Exception e) {
-            showFinalAlert(e, R.string.play_error);
+           // showFinalAlert(e, R.string.play_error);
             return;
         }
     }
@@ -407,6 +369,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             }
         }
     };
+
 
 
     private void enableDisableButtons() {
