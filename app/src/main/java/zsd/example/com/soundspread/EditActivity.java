@@ -1,10 +1,12 @@
 package zsd.example.com.soundspread;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -13,7 +15,10 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -30,28 +35,94 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     private long firstbookmark;
     private long secondbookmark;
 
+
+    private DataList dataList;
+    public static EditActivity instance = null;
+    private long mLoadingLastUpdateTime;
+    private boolean mLoadingKeepGoing;
+    private long mRecordingLastUpdateTime;
+    private boolean mRecordingKeepGoing;
+    private double mRecordingTime;
+    private boolean mFinishActivity;
+    private TextView mTimerTextView;
+    private AlertDialog mAlertDialog;
+    private ProgressDialog mProgressDialog;
+    private SoundFile mSoundFile;
+    private File mFile;
+    private String mFilename;
+    private String mArtist;
+    private String mTitle;
+    private int mNewFileKind;
+    private boolean mWasGetContentIntent;
     private WaveformView mWaveformView;
     private MarkerView mStartMarker;
     private MarkerView mEndMarker;
-    private DataList dataList;
-    private File mFile;
-    private String mFilename;
-    private SoundFile mSoundFile;
-    private long mLoadingLastUpdateTime;
-    public static EditActivity instance = null;
+    private TextView mStartText;
+    private TextView mEndText;
+    private TextView mInfo;
+    private String mInfoContent;
+    private ImageButton mPlayButton;
+    private ImageButton mRewindButton;
+    private ImageButton mFfwdButton;
+    private boolean mKeyDown;
+    private String mCaption = "";
+    private int mWidth;
+    private int mMaxPos;
+    private int mStartPos;
+    private int mEndPos;
+    private boolean mStartVisible;
+    private boolean mEndVisible;
+    private int mLastDisplayedStartPos;
+    private int mLastDisplayedEndPos;
+    private int mOffset;
+    private int mOffsetGoal;
+    private int mFlingVelocity;
+    private int mPlayStartMsec;
+    private int mPlayEndMsec;
+    private Handler mHandler;
+    private boolean mIsPlaying;
+    //private SamplePlayer mPlayer;
+    private boolean mTouchDragging;
+    private float mTouchStart;
+    private int mTouchInitialOffset;
+    private int mTouchInitialStartPos;
+    private int mTouchInitialEndPos;
+    private long mWaveformTouchStartMsec;
     private float mDensity;
+    private int mMarkerLeftInset;
+    private int mMarkerRightInset;
+    private int mMarkerTopOffset;
+    private int mMarkerBottomOffset;
+
+    private Thread mLoadSoundFileThread;
+    private Thread mRecordAudioThread;
+    private Thread mSaveSoundFileThread;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit);
+        Intent intent=getIntent();
+        Bundle bundle = intent.getExtras();
+        musicname = (String) bundle.getSerializable("uri");
+        Uri uri= Uri.parse(musicname);
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         mDensity = metrics.density;
+        mHandler=new Handler();
+        mMarkerLeftInset = (int)(46 * mDensity);
+        mMarkerRightInset = (int)(48 * mDensity);
+        mMarkerTopOffset = (int)(10 * mDensity);
+        mMarkerBottomOffset = (int)(10 * mDensity);
+        mMaxPos = 0;
+        mLastDisplayedStartPos = -1;
+        mLastDisplayedEndPos = -1;
         mLoadingLastUpdateTime = getCurrentTime();
         mFilename="/mnt/soundspread/test1.mp3";
         mFile = new File(mFilename);
         try {
-            mSoundFile = SoundFile.create("/mnt/sdcard/soundspread/Sponge bob.mp3");
+           // mSoundFile = SoundFile.create("/mnt/sdcard/soundspread/Sponge bob.mp3");
+            mSoundFile = SoundFile.create(musicname);
+            //mSoundFile = SoundFile.create("/mnt/sdcard/soundspread/clip/test.mp3");
         } catch (IOException e) {
             e.printStackTrace();
         } catch (SoundFile.InvalidInputException e) {
@@ -63,6 +134,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             Toast.makeText(EditActivity.this,"input",Toast.LENGTH_SHORT).show();
             mWaveformView.setSoundFile(mSoundFile);
             mWaveformView.recomputeHeights(mDensity);
+            mMaxPos = mWaveformView.maxPos();
         }
         else
         {
@@ -73,16 +145,15 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         mStartMarker.setAlpha(1f);
         mStartMarker.setFocusable(true);
         mStartMarker.setFocusableInTouchMode(true);
+        mStartVisible = true;
 
         mEndMarker = (MarkerView)findViewById(R.id.endmarker);
         mEndMarker.setListener(this);
         mEndMarker.setAlpha(1f);
         mEndMarker.setFocusable(true);
         mEndMarker.setFocusableInTouchMode(true);
-        Intent intent=getIntent();
-        Bundle bundle = intent.getExtras();
-        musicname = (String) bundle.getSerializable("uri");
-        Uri uri= Uri.parse(musicname);
+        mEndVisible = true;
+
         //Toast.makeText(EditActivity.this, musicname, Toast.LENGTH_SHORT).show();
         clipaudio=(Button)findViewById(R.id.clipaudio);
         clipaudio.setOnClickListener(new View.OnClickListener() {
@@ -105,7 +176,6 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                             }
                         })
                         .setNegativeButton("Cancel", null).show();
-
             }
         });
         checkclipfile=(Button)findViewById(R.id.checkclipfile);
@@ -136,14 +206,14 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             }
 
         }
-        ArrayAdapter<String> adapter=new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item, mItems);
+        ArrayAdapter<String> adapter=new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, mItems);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view,
                                        int pos, long id) {
-                firstbookmark=dataList.getitem(pos).getBookmarktime();
-               // Toast.makeText(EditActivity.this, Long.toString(firstbookmark), Toast.LENGTH_SHORT).show();
+                firstbookmark = dataList.getitem(pos).getBookmarktime();
+                // Toast.makeText(EditActivity.this, Long.toString(firstbookmark), Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -158,6 +228,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                 secondbookmark=dataList.getitem(pos).getBookmarktime();
                // Toast.makeText(EditActivity.this,Long.toString(secondbookmark),Toast.LENGTH_SHORT).show();
             }
+
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 // Another interface callback
@@ -165,6 +236,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         });
         spinner.setAdapter(adapter);
         spinner1.setAdapter(adapter);
+        updateDisplay();
         instance = this;
 
 
@@ -172,32 +244,107 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
 
     @Override
     public void markerTouchStart(MarkerView marker, float pos) {
-
+        mTouchDragging = true;
+        mTouchStart = pos;
+        mTouchInitialStartPos = mStartPos;
+        mTouchInitialEndPos = mEndPos;
     }
 
     @Override
     public void markerTouchMove(MarkerView marker, float pos) {
+        float delta = pos - mTouchStart;
 
+        if (marker == mStartMarker) {
+            mStartPos = trap((int)(mTouchInitialStartPos + delta));
+            mEndPos = trap((int)(mTouchInitialEndPos + delta));
+        } else {
+            mEndPos = trap((int)(mTouchInitialEndPos + delta));
+            if (mEndPos < mStartPos)
+                mEndPos = mStartPos;
+        }
+
+        updateDisplay();
     }
 
     @Override
     public void markerTouchEnd(MarkerView marker) {
-
+        mTouchDragging = false;
+        if (marker == mStartMarker) {
+            setOffsetGoalStart();
+        } else {
+            setOffsetGoalEnd();
+        }
     }
 
     @Override
     public void markerFocus(MarkerView marker) {
+        mKeyDown = false;
+        if (marker == mStartMarker) {
+            setOffsetGoalStartNoUpdate();
+        } else {
+            setOffsetGoalEndNoUpdate();
+        }
 
+        // Delay updaing the display because if this focus was in
+        // response to a touch event, we want to receive the touch
+        // event too before updating the display.
+        mHandler.postDelayed(new Runnable() {
+            public void run() {
+                updateDisplay();
+            }
+        }, 100);
     }
 
     @Override
     public void markerLeft(MarkerView marker, int velocity) {
+        mKeyDown = true;
 
+        if (marker == mStartMarker) {
+            int saveStart = mStartPos;
+            mStartPos = trap(mStartPos - velocity);
+            mEndPos = trap(mEndPos - (saveStart - mStartPos));
+            setOffsetGoalStart();
+        }
+
+        if (marker == mEndMarker) {
+            if (mEndPos == mStartPos) {
+                mStartPos = trap(mStartPos - velocity);
+                mEndPos = mStartPos;
+            } else {
+                mEndPos = trap(mEndPos - velocity);
+            }
+
+            setOffsetGoalEnd();
+        }
+
+        updateDisplay();
     }
 
     @Override
     public void markerRight(MarkerView marker, int velocity) {
+        mKeyDown = true;
 
+        if (marker == mStartMarker) {
+            int saveStart = mStartPos;
+            mStartPos += velocity;
+            if (mStartPos > mMaxPos)
+                mStartPos = mMaxPos;
+            mEndPos += (mStartPos - saveStart);
+            if (mEndPos > mMaxPos)
+                mEndPos = mMaxPos;
+
+            setOffsetGoalStart();
+        }
+
+        if (marker == mEndMarker) {
+            mEndPos += velocity;
+            if (mEndPos > mMaxPos)
+                mEndPos = mMaxPos;
+
+            setOffsetGoalEnd();
+        }
+
+        updateDisplay();
     }
 
     @Override
@@ -207,7 +354,8 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
 
     @Override
     public void markerKeyUp() {
-
+        mKeyDown = false;
+        updateDisplay();
     }
 
     @Override
@@ -217,27 +365,56 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
 
     @Override
     public void waveformTouchStart(float x) {
-
+        mTouchDragging = true;
+        mTouchStart = x;
+        mTouchInitialOffset = mOffset;
+        mFlingVelocity = 0;
+        mWaveformTouchStartMsec = getCurrentTime();
     }
 
     @Override
     public void waveformTouchMove(float x) {
-
+        mOffset = trap((int)(mTouchInitialOffset + (mTouchStart - x)));
+        updateDisplay();
     }
 
     @Override
     public void waveformTouchEnd() {
+        mTouchDragging = false;
+        mOffsetGoal = mOffset;
 
+        long elapsedMsec = getCurrentTime() - mWaveformTouchStartMsec;
+        if (elapsedMsec < 300) {
+            if (mIsPlaying) {
+                int seekMsec = mWaveformView.pixelsToMillisecs(
+                        (int)(mTouchStart + mOffset));
+                if (seekMsec >= mPlayStartMsec &&
+                        seekMsec < mPlayEndMsec) {
+                } else {
+                }
+            } else {
+            }
+        }
     }
 
     @Override
     public void waveformFling(float x) {
-
+        mTouchDragging = false;
+        mOffsetGoal = mOffset;
+        mFlingVelocity = (int)(-x);
+        updateDisplay();
     }
 
     @Override
     public void waveformDraw() {
-
+        mWidth = mWaveformView.getMeasuredWidth();
+        if (mOffsetGoal != mOffset && !mKeyDown)
+            updateDisplay();
+        else if (mIsPlaying) {
+            updateDisplay();
+        } else if (mFlingVelocity != 0) {
+            updateDisplay();
+        }
     }
 
     @Override
@@ -268,4 +445,193 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
    private long getCurrentTime() {
        return System.nanoTime() / 1000000;
    }
+    private void resetPositions() {
+        mStartPos = mWaveformView.secondsToPixels(0.0);
+        mEndPos = mWaveformView.secondsToPixels(15.0);
+    }
+    private synchronized void updateDisplay() {
+       // int frames = mWaveformView.millisecsToPixels(0);
+       // mWaveformView.setPlayback(frames);
+        //setOffsetGoalNoUpdate(frames - mWidth / 2);
+        if (mIsPlaying) {
+            int frames = mWaveformView.millisecsToPixels(0);//set the default value, which can be replaced by the position of the player
+            mWaveformView.setPlayback(frames);
+            setOffsetGoalNoUpdate(frames - mWidth / 2);
+        }
+        if (!mTouchDragging) {
+            int offsetDelta;
+
+            if (mFlingVelocity != 0) {
+                offsetDelta = mFlingVelocity / 30;
+                if (mFlingVelocity > 80) {
+                    mFlingVelocity -= 80;
+                } else if (mFlingVelocity < -80) {
+                    mFlingVelocity += 80;
+                } else {
+                    mFlingVelocity = 0;
+                }
+
+                mOffset += offsetDelta;
+
+                if (mOffset + mWidth / 2 > mMaxPos) {
+                    mOffset = mMaxPos - mWidth / 2;
+                    mFlingVelocity = 0;
+                }
+                if (mOffset < 0) {
+                    mOffset = 0;
+                    mFlingVelocity = 0;
+                }
+                mOffsetGoal = mOffset;
+            } else {
+                offsetDelta = mOffsetGoal - mOffset;
+
+                if (offsetDelta > 10)
+                    offsetDelta = offsetDelta / 10;
+                else if (offsetDelta > 0)
+                    offsetDelta = 1;
+                else if (offsetDelta < -10)
+                    offsetDelta = offsetDelta / 10;
+                else if (offsetDelta < 0)
+                    offsetDelta = -1;
+                else
+                    offsetDelta = 0;
+
+                mOffset += offsetDelta;
+            }
+        }
+
+        mWaveformView.setParameters(mStartPos, mEndPos, mOffset);
+        mWaveformView.invalidate();
+
+        mStartMarker.setContentDescription(
+                getResources().getText(R.string.start_marker) + " " +
+                        formatTime(mStartPos));
+        mEndMarker.setContentDescription(
+                getResources().getText(R.string.end_marker) + " " +
+                        formatTime(mEndPos));
+
+        int startX = mStartPos - mOffset - mMarkerLeftInset;
+        if (startX + mStartMarker.getWidth() >= 0) {
+            if (!mStartVisible) {
+                // Delay this to avoid flicker
+                mHandler.postDelayed(new Runnable() {
+                    public void run() {
+                        mStartVisible = true;
+                        mStartMarker.setAlpha(1f);
+                    }
+                }, 0);
+            }
+        } else {
+            if (mStartVisible) {
+                mStartMarker.setAlpha(0f);
+                mStartVisible = false;
+            }
+            startX = 0;
+        }
+
+        int endX = mEndPos - mOffset - mEndMarker.getWidth() + mMarkerRightInset;
+        if (endX + mEndMarker.getWidth() >= 0) {
+            if (!mEndVisible) {
+                // Delay this to avoid flicker
+                mHandler.postDelayed(new Runnable() {
+                    public void run() {
+                        mEndVisible = true;
+                        mEndMarker.setAlpha(1f);
+                    }
+                }, 0);
+            }
+        } else {
+            if (mEndVisible) {
+                mEndMarker.setAlpha(0f);
+                mEndVisible = false;
+            }
+            endX = 0;
+        }
+        //mStartMarker.setAlpha(1f);//change the transparency of startmark
+        //mEndMarker.setAlpha(1f);//change the transparency of endmark
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.WRAP_CONTENT,
+                RelativeLayout.LayoutParams.WRAP_CONTENT);
+        params.setMargins(
+                startX,
+                mMarkerTopOffset,
+                -mStartMarker.getWidth(),
+                -mStartMarker.getHeight());
+        mStartMarker.setLayoutParams(params);
+
+        params = new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.WRAP_CONTENT,
+                RelativeLayout.LayoutParams.WRAP_CONTENT);
+        params.setMargins(
+                endX,
+                (int)(getWindowManager().getDefaultDisplay().getHeight()*0.333),
+                -mStartMarker.getWidth(),
+                -mStartMarker.getHeight());
+        mEndMarker.setLayoutParams(params);
+    }
+
+    private String formatTime(int pixels) {
+        if (mWaveformView != null && mWaveformView.isInitialized()) {
+            return formatDecimal(mWaveformView.pixelsToSeconds(pixels));
+        } else {
+            return "";
+        }
+    }
+    private String formatDecimal(double x) {
+        int xWhole = (int)x;
+        int xFrac = (int)(100 * (x - xWhole) + 0.5);
+
+        if (xFrac >= 100) {
+            xWhole++; //Round up
+            xFrac -= 100; //Now we need the remainder after the round up
+            if (xFrac < 10) {
+                xFrac *= 10; //we need a fraction that is 2 digits long
+            }
+        }
+
+        if (xFrac < 10)
+            return xWhole + ".0" + xFrac;
+        else
+            return xWhole + "." + xFrac;
+    }
+    private void setOffsetGoalStart() {
+        setOffsetGoal(mStartPos - mWidth / 2);
+    }
+
+    private void setOffsetGoalStartNoUpdate() {
+        setOffsetGoalNoUpdate(mStartPos - mWidth / 2);
+    }
+
+    private void setOffsetGoalEnd() {
+        setOffsetGoal(mEndPos - mWidth / 2);
+    }
+
+    private void setOffsetGoalEndNoUpdate() {
+        setOffsetGoalNoUpdate(mEndPos - mWidth / 2);
+    }
+
+    private void setOffsetGoal(int offset) {
+        setOffsetGoalNoUpdate(offset);
+        updateDisplay();
+    }
+
+    private void setOffsetGoalNoUpdate(int offset) {
+        if (mTouchDragging) {
+            return;
+        }
+
+        mOffsetGoal = offset;
+        if (mOffsetGoal + mWidth / 2 > mMaxPos)
+            mOffsetGoal = mMaxPos - mWidth / 2;
+        if (mOffsetGoal < 0)
+            mOffsetGoal = 0;
+    }
+    private int trap(int pos) {
+        if (pos < 0)
+            return 0;
+        if (pos > mMaxPos)
+            return mMaxPos;
+        return pos;
+    }
+
 }
