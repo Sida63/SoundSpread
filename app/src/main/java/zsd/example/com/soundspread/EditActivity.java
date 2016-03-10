@@ -181,7 +181,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                                 try {
                                     MP3File f = new MP3File(musicname);
                                     //Toast.makeText(EditActivity.this,et.getText().toString(),Toast.LENGTH_SHORT).show();
-                                    f.cut(firstbookmark, secondbookmark, et.getText().toString());
+                                    f.cut(mWaveformView.pixelsToMillisecs(mStartPos), mWaveformView.pixelsToMillisecs(mEndPos), et.getText().toString());
                                     Toast.makeText(EditActivity.this, "MP3 file is cut successfully", Toast.LENGTH_SHORT).show();
                                 } catch (Exception ex) {
                                     ex.printStackTrace();
@@ -309,7 +309,9 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         }
 
         try {
-            Toast.makeText(EditActivity.this,Integer.toString(startPosition),Toast.LENGTH_SHORT).show();
+            Toast.makeText(EditActivity.this,Integer.toString(mStartPos),Toast.LENGTH_SHORT).show();
+            Toast.makeText(EditActivity.this,Integer.toString(mEndPos),Toast.LENGTH_SHORT).show();
+
             mPlayStartMsec = mWaveformView.pixelsToMillisecs(startPosition);
             if (startPosition < mStartPos) {
                 mPlayEndMsec = mWaveformView.pixelsToMillisecs(mStartPos);
