@@ -1,10 +1,13 @@
 package zsd.example.com.soundspread;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
@@ -22,6 +25,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -36,6 +40,9 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     private long firstbookmark;
     private long secondbookmark;
     private long curretntime;
+
+
+    private SamplePlayer mPlayer;
 
 
     private DataList dataList;
@@ -122,7 +129,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         mLastDisplayedStartPos = -1;
         mLastDisplayedEndPos = -1;
         mLoadingLastUpdateTime = getCurrentTime();
-        mFilename="/mnt/soundspread/test1.mp3";
+        mFilename=musicname;
         mFile = new File(mFilename);
         try {
            // mSoundFile = SoundFile.create("/mnt/sdcard/soundspread/Sponge bob.mp3");
@@ -145,6 +152,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         {
             Toast.makeText(EditActivity.this,"aout",Toast.LENGTH_SHORT).show();
         }
+        loadplayer();
         mStartMarker = (MarkerView)findViewById(R.id.startmarker);
         mStartMarker.setListener(this);
         mStartMarker.setAlpha(1f);
@@ -173,7 +181,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                                 try {
                                     MP3File f = new MP3File(musicname);
                                     //Toast.makeText(EditActivity.this,et.getText().toString(),Toast.LENGTH_SHORT).show();
-                                    f.cut(firstbookmark, secondbookmark, et.getText().toString());
+                                    f.cut(mWaveformView.pixelsToMillisecs(mStartPos), mWaveformView.pixelsToMillisecs(mEndPos), et.getText().toString());
                                     Toast.makeText(EditActivity.this, "MP3 file is cut successfully", Toast.LENGTH_SHORT).show();
                                 } catch (Exception ex) {
                                     ex.printStackTrace();
@@ -195,6 +203,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
 
         dataList=(DataList)bundle.getSerializable("datalist");
         //Toast.makeText(EditActivity.this,Long.toString(dataList.getitem(0).getBookmarktime()),Toast.LENGTH_SHORT).show();
+        /*
         spinner = (Spinner) findViewById(R.id.showbookmark);
         spinner1 = (Spinner) findViewById(R.id.shownextbookmark);
         String[] mItems=new String[dataList.size()];
@@ -211,14 +220,14 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             }
 
         }
-        ArrayAdapter<String> adapter=new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, mItems);
+        ArrayAdapter<String> adapter=new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item, mItems);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view,
                                        int pos, long id) {
-                firstbookmark = dataList.getitem(pos).getBookmarktime();
-                // Toast.makeText(EditActivity.this, Long.toString(firstbookmark), Toast.LENGTH_SHORT).show();
+                firstbookmark=dataList.getitem(pos).getBookmarktime();
+               // Toast.makeText(EditActivity.this, Long.toString(firstbookmark), Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -230,8 +239,8 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             @Override
             public void onItemSelected(AdapterView<?> parent, View view,
                                        int pos, long id) {
-                secondbookmark = dataList.getitem(pos).getBookmarktime();
-                // Toast.makeText(EditActivity.this,Long.toString(secondbookmark),Toast.LENGTH_SHORT).show();
+                secondbookmark=dataList.getitem(pos).getBookmarktime();
+               // Toast.makeText(EditActivity.this,Long.toString(secondbookmark),Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -241,11 +250,138 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         });
         spinner.setAdapter(adapter);
         spinner1.setAdapter(adapter);
+        */
+
         updateDisplay();
-     //   updatedotdisplay();
         instance = this;
 
 
+    }
+
+
+
+    private void loadplayer() {
+        mPlayer = null;
+        mIsPlaying = false;
+        mPlayButton = (ImageButton)findViewById(R.id.play);
+        mPlayButton.setOnClickListener(mPlayListener);
+        mRewindButton = (ImageButton)findViewById(R.id.rew);
+        mRewindButton.setOnClickListener(mRewindListener);
+        mFfwdButton = (ImageButton)findViewById(R.id.ffwd);
+        mFfwdButton.setOnClickListener(mFfwdListener);
+        resetPositions();
+
+        new Thread() {
+            public void run() {
+            //    mCanSeekAccurately = SeekTest.CanSeekAccurately(
+            //            getPreferences(Context.MODE_PRIVATE));
+
+            //    System.out.println("Seek test done, creating media player.");
+                try {
+                    mPlayer = new SamplePlayer(mSoundFile);
+                } catch (final Exception e) {
+
+                    e.printStackTrace();
+                };
+            }
+        }.start();
+
+    }
+
+    private synchronized void handlePause() {
+        if (mPlayer != null && mPlayer.isPlaying()) {
+            mPlayer.pause();
+        }
+        mWaveformView.setPlayback(-1);
+        mIsPlaying = false;
+        enableDisableButtons();
+    }
+
+    private synchronized void onPlay(int startPosition) {
+        if (mIsPlaying) {
+            handlePause();
+            return;
+        }
+
+        if (mPlayer == null) {
+            // Not initialized yet
+            return;
+        }
+
+        try {
+            Toast.makeText(EditActivity.this,Integer.toString(mStartPos),Toast.LENGTH_SHORT).show();
+            Toast.makeText(EditActivity.this,Integer.toString(mEndPos),Toast.LENGTH_SHORT).show();
+
+            mPlayStartMsec = mWaveformView.pixelsToMillisecs(startPosition);
+            if (startPosition < mStartPos) {
+                mPlayEndMsec = mWaveformView.pixelsToMillisecs(mStartPos);
+            } else if (startPosition > mEndPos) {
+                mPlayEndMsec = mWaveformView.pixelsToMillisecs(mMaxPos);
+            } else {
+                mPlayEndMsec = mWaveformView.pixelsToMillisecs(mEndPos);
+            }
+            mPlayer.setOnCompletionListener(new SamplePlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion() {
+                    handlePause();
+                }
+            });
+            mIsPlaying = true;
+
+            mPlayer.seekTo(mPlayStartMsec);
+            mPlayer.start();
+            updateDisplay();
+            enableDisableButtons();
+        } catch (Exception e) {
+           // showFinalAlert(e, R.string.play_error);
+            return;
+        }
+    }
+
+    private View.OnClickListener mPlayListener = new View.OnClickListener() {
+        public void onClick(View sender) {
+            onPlay(mStartPos);
+        }
+    };
+
+    private View.OnClickListener mRewindListener = new View.OnClickListener() {
+        public void onClick(View sender) {
+            if (mIsPlaying) {
+                int newPos = mPlayer.getCurrentPosition() - 5000;
+                if (newPos < mPlayStartMsec)
+                    newPos = mPlayStartMsec;
+                mPlayer.seekTo(newPos);
+            } else {
+                mStartMarker.requestFocus();
+                markerFocus(mStartMarker);
+            }
+        }
+    };
+
+    private View.OnClickListener mFfwdListener = new View.OnClickListener() {
+        public void onClick(View sender) {
+            if (mIsPlaying) {
+                int newPos = 5000 + mPlayer.getCurrentPosition();
+                if (newPos > mPlayEndMsec)
+                    newPos = mPlayEndMsec;
+                mPlayer.seekTo(newPos);
+            } else {
+                mEndMarker.requestFocus();
+                markerFocus(mEndMarker);
+            }
+        }
+    };
+
+
+
+    private void enableDisableButtons() {
+        if (mIsPlaying) {
+            mPlayButton.setImageResource(android.R.drawable.ic_media_pause);
+            mPlayButton.setContentDescription("Stop");
+        } else {
+            mPlayButton.setImageResource(android.R.drawable.ic_media_play);
+            mPlayButton.setContentDescription("Pause");
+        }
     }
 
     @Override
@@ -382,7 +518,6 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     public void waveformTouchMove(float x) {
         mOffset = trap((int)(mTouchInitialOffset + (mTouchStart - x)));
         updateDisplay();
-      //  updatedotdisplay();
     }
 
     @Override
@@ -410,22 +545,17 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         mOffsetGoal = mOffset;
         mFlingVelocity = (int)(-x);
         updateDisplay();
-      //  updatedotdisplay();
     }
 
     @Override
     public void waveformDraw() {
         mWidth = mWaveformView.getMeasuredWidth();
-        if (mOffsetGoal != mOffset && !mKeyDown) {
+        if (mOffsetGoal != mOffset && !mKeyDown)
             updateDisplay();
-         //   updatedotdisplay();
-        }
         else if (mIsPlaying) {
             updateDisplay();
-          //  updatedotdisplay();
         } else if (mFlingVelocity != 0) {
             updateDisplay();
-          //  updatedotdisplay();
         }
     }
 
@@ -576,7 +706,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                 RelativeLayout.LayoutParams.WRAP_CONTENT);
         params.setMargins(
                 endX,
-                (int) (getWindowManager().getDefaultDisplay().getHeight() * 0.333),
+                (int)(getWindowManager().getDefaultDisplay().getHeight()*0.333),
                 -mStartMarker.getWidth(),
                 -mStartMarker.getHeight());
         mEndMarker.setLayoutParams(params);
