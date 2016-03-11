@@ -23,6 +23,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 
 public class EditActivity extends AppCompatActivity implements MarkerView.MarkerListener,
@@ -34,6 +35,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     private String musicname;
     private long firstbookmark;
     private long secondbookmark;
+    private long curretntime;
 
 
     private DataList dataList;
@@ -92,6 +94,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     private int mMarkerLeftInset;
     private int mMarkerRightInset;
     private int mMarkerTopOffset;
+    private ArrayList<TextView> bookmarklist;
     private int mMarkerBottomOffset;
 
     private Thread mLoadSoundFileThread;
@@ -101,6 +104,8 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit);
+        curretntime=System.currentTimeMillis();
+        bookmarklist=new ArrayList<TextView>();
         Intent intent=getIntent();
         Bundle bundle = intent.getExtras();
         musicname = (String) bundle.getSerializable("uri");
@@ -225,8 +230,8 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             @Override
             public void onItemSelected(AdapterView<?> parent, View view,
                                        int pos, long id) {
-                secondbookmark=dataList.getitem(pos).getBookmarktime();
-               // Toast.makeText(EditActivity.this,Long.toString(secondbookmark),Toast.LENGTH_SHORT).show();
+                secondbookmark = dataList.getitem(pos).getBookmarktime();
+                // Toast.makeText(EditActivity.this,Long.toString(secondbookmark),Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -237,6 +242,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         spinner.setAdapter(adapter);
         spinner1.setAdapter(adapter);
         updateDisplay();
+     //   updatedotdisplay();
         instance = this;
 
 
@@ -272,7 +278,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         if (marker == mStartMarker) {
             setOffsetGoalStart();
         } else {
-            setOffsetGoalEnd();
+            //setOffsetGoalEnd();
         }
     }
 
@@ -282,7 +288,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         if (marker == mStartMarker) {
             setOffsetGoalStartNoUpdate();
         } else {
-            setOffsetGoalEndNoUpdate();
+            //setOffsetGoalEndNoUpdate();
         }
 
         // Delay updaing the display because if this focus was in
@@ -314,7 +320,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                 mEndPos = trap(mEndPos - velocity);
             }
 
-            setOffsetGoalEnd();
+            //setOffsetGoalEnd();
         }
 
         updateDisplay();
@@ -344,7 +350,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             setOffsetGoalEnd();
         }
 
-        updateDisplay();
+       // updateDisplay();
     }
 
     @Override
@@ -376,6 +382,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     public void waveformTouchMove(float x) {
         mOffset = trap((int)(mTouchInitialOffset + (mTouchStart - x)));
         updateDisplay();
+      //  updatedotdisplay();
     }
 
     @Override
@@ -403,17 +410,22 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         mOffsetGoal = mOffset;
         mFlingVelocity = (int)(-x);
         updateDisplay();
+      //  updatedotdisplay();
     }
 
     @Override
     public void waveformDraw() {
         mWidth = mWaveformView.getMeasuredWidth();
-        if (mOffsetGoal != mOffset && !mKeyDown)
+        if (mOffsetGoal != mOffset && !mKeyDown) {
             updateDisplay();
+         //   updatedotdisplay();
+        }
         else if (mIsPlaying) {
             updateDisplay();
+          //  updatedotdisplay();
         } else if (mFlingVelocity != 0) {
             updateDisplay();
+          //  updatedotdisplay();
         }
     }
 
@@ -564,10 +576,11 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                 RelativeLayout.LayoutParams.WRAP_CONTENT);
         params.setMargins(
                 endX,
-                (int)(getWindowManager().getDefaultDisplay().getHeight()*0.333),
+                (int) (getWindowManager().getDefaultDisplay().getHeight() * 0.333),
                 -mStartMarker.getWidth(),
                 -mStartMarker.getHeight());
         mEndMarker.setLayoutParams(params);
+        updatedotdisplay();
     }
 
     private String formatTime(int pixels) {
@@ -632,6 +645,44 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         if (pos > mMaxPos)
             return mMaxPos;
         return pos;
+    }
+
+    private void updatedotdisplay() {
+        int mOffset1=mOffset;
+        if (System.currentTimeMillis() - curretntime > 1000) {
+            RelativeLayout dynamiclayout = (RelativeLayout) findViewById(R.id.dynamiclayout);
+            if (bookmarklist.size() != 0) {
+                for (int k = 0; k < bookmarklist.size(); k++) {
+                    dynamiclayout.removeView(bookmarklist.get(k));
+                }
+            }
+            //Toast.makeText(EditActivity.this,Integer.toString(mOffset),Toast.LENGTH_SHORT).show();
+            for (int i = 0; i < dataList.size(); i++) {
+                if ((int) ((dataList.getitem(i).getBookmarktime() / 60000.0) * dynamiclayout.getWidth()) - mOffset1 >= 0) {
+                    //Toast.makeText(EditActivity.this,Integer.toString(dataList.getitem(i).getBookmarktime()/1000),Toast.LENGTH_SHORT).show();
+                    TextView bookmark = new TextView(this);
+                    //bookmark.setId(110);
+                    bookmark.setText("●");
+                    bookmark.setId(dataList.getitem(i).getBookmarktime() / 1000);
+                    bookmark.setTextColor(android.graphics.Color.RED);
+                    RelativeLayout.LayoutParams lp1 = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+                            RelativeLayout.LayoutParams.WRAP_CONTENT);
+                    lp1.setMargins((int) ((dataList.getitem(i).getBookmarktime() / 60000.0) * getWindowManager().getDefaultDisplay().getWidth()) - mOffset1
+                            , (int) (getWindowManager().getDefaultDisplay().getHeight() * 0.2), bookmark.getWidth(), bookmark.getHeight());
+//        lp1.addRule(RelativeLayout.ALIGN_TOP);
+//        lp1.setMargins(30, 50, 100, 100);//(int left, int top, int right, int bottom)
+                    dynamiclayout.addView(bookmark, lp1);
+                    bookmarklist.add(bookmark);
+                } else {
+                    //Toast.makeText(EditActivity.this,"delete",Toast.LENGTH_SHORT).show();
+                    for (int j = 0; j < bookmarklist.size(); j++) {
+                        // Toast.makeText(EditActivity.this,bookmarklist.get(j).getText().toString(),Toast.LENGTH_SHORT).show();
+                        if (bookmarklist.get(j).getId() == dataList.getitem(i).getBookmarktime() / 1000)
+                            dynamiclayout.removeView(bookmarklist.get(j));
+                    }
+                }
+            }
+        }
     }
 
 }

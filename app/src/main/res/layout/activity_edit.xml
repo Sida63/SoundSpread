@@ -13,6 +13,7 @@
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="fill_parent"
+        android:id="@+id/dynamiclayout"
         android:layout_weight="0.5">
 
         <zsd.example.com.soundspread.WaveformView
