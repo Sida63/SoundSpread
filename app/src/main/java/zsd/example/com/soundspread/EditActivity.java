@@ -28,6 +28,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class EditActivity extends AppCompatActivity implements MarkerView.MarkerListener,
@@ -98,20 +100,31 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     private int mTouchInitialEndPos;
     private long mWaveformTouchStartMsec;
     private float mDensity;
+    private long cutstartposition;
+    private long cutfinalposition;
     private int mMarkerLeftInset;
     private int mMarkerRightInset;
     private int mMarkerTopOffset;
     private ArrayList<TextView> bookmarklist;
+    private int duration;
     private int mMarkerBottomOffset;
 
     private Thread mLoadSoundFileThread;
     private Thread mRecordAudioThread;
     private Thread mSaveSoundFileThread;
+    private String mtimeflag;
+    private int minute;
+    private int seconds;
+    private double counts=1;
+    private int mOffsetstart;
+    private int mOffsetend;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit);
         curretntime=System.currentTimeMillis();
+        cutstartposition=0;
+        cutfinalposition=0;
         bookmarklist=new ArrayList<TextView>();
         Intent intent=getIntent();
         Bundle bundle = intent.getExtras();
@@ -134,6 +147,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         try {
            // mSoundFile = SoundFile.create("/mnt/sdcard/soundspread/Sponge bob.mp3");
             mSoundFile = SoundFile.create(musicname);
+            duration=MediaPlayer.create(this, Uri.parse(musicname)).getDuration();
             //mSoundFile = SoundFile.create("/mnt/sdcard/soundspread/clip/test.mp3");
         } catch (IOException e) {
             e.printStackTrace();
@@ -181,7 +195,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                                 try {
                                     MP3File f = new MP3File(musicname);
                                     //Toast.makeText(EditActivity.this,et.getText().toString(),Toast.LENGTH_SHORT).show();
-                                    f.cut(mWaveformView.pixelsToMillisecs(mStartPos), mWaveformView.pixelsToMillisecs(mEndPos), et.getText().toString());
+                                    f.cut(cutstartposition, cutfinalposition, et.getText().toString());
                                     Toast.makeText(EditActivity.this, "MP3 file is cut successfully", Toast.LENGTH_SHORT).show();
                                 } catch (Exception ex) {
                                     ex.printStackTrace();
@@ -412,9 +426,9 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     public void markerTouchEnd(MarkerView marker) {
         mTouchDragging = false;
         if (marker == mStartMarker) {
-            setOffsetGoalStart();
+      //      setOffsetGoalStart();
         } else {
-            //setOffsetGoalEnd();
+     //       setOffsetGoalEnd();
         }
     }
 
@@ -422,9 +436,9 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     public void markerFocus(MarkerView marker) {
         mKeyDown = false;
         if (marker == mStartMarker) {
-            setOffsetGoalStartNoUpdate();
+       //     setOffsetGoalStartNoUpdate();
         } else {
-            //setOffsetGoalEndNoUpdate();
+           // setOffsetGoalEndNoUpdate();
         }
 
         // Delay updaing the display because if this focus was in
@@ -445,7 +459,8 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             int saveStart = mStartPos;
             mStartPos = trap(mStartPos - velocity);
             mEndPos = trap(mEndPos - (saveStart - mStartPos));
-            setOffsetGoalStart();
+            mOffsetstart=mOffset;
+         //   setOffsetGoalStart();
         }
 
         if (marker == mEndMarker) {
@@ -455,8 +470,8 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             } else {
                 mEndPos = trap(mEndPos - velocity);
             }
-
-            //setOffsetGoalEnd();
+            mOffsetend=mOffset;
+         //   setOffsetGoalEnd();
         }
 
         updateDisplay();
@@ -474,19 +489,19 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             mEndPos += (mStartPos - saveStart);
             if (mEndPos > mMaxPos)
                 mEndPos = mMaxPos;
-
-            setOffsetGoalStart();
+                mOffsetstart=mOffset;
+         //   setOffsetGoalStart();
         }
 
         if (marker == mEndMarker) {
             mEndPos += velocity;
             if (mEndPos > mMaxPos)
                 mEndPos = mMaxPos;
-
-            setOffsetGoalEnd();
+                mOffsetend=mOffset;
+         //   setOffsetGoalEnd();
         }
 
-       // updateDisplay();
+        updateDisplay();
     }
 
     @Override
@@ -595,6 +610,9 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
        // int frames = mWaveformView.millisecsToPixels(0);
        // mWaveformView.setPlayback(frames);
         //setOffsetGoalNoUpdate(frames - mWidth / 2);
+        if(mtimeflag==null) {
+            mtimeflag = mWaveformView.timeflag;
+        }
         if (mIsPlaying) {
             int frames = mWaveformView.millisecsToPixels(0);//set the default value, which can be replaced by the position of the player
             mWaveformView.setPlayback(frames);
@@ -651,7 +669,6 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         mEndMarker.setContentDescription(
                 getResources().getText(R.string.end_marker) + " " +
                         formatTime(mEndPos));
-
         int startX = mStartPos - mOffset - mMarkerLeftInset;
         if (startX + mStartMarker.getWidth() >= 0) {
             if (!mStartVisible) {
@@ -670,7 +687,6 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             }
             startX = 0;
         }
-
         int endX = mEndPos - mOffset - mEndMarker.getWidth() + mMarkerRightInset;
         if (endX + mEndMarker.getWidth() >= 0) {
             if (!mEndVisible) {
@@ -706,10 +722,61 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                 RelativeLayout.LayoutParams.WRAP_CONTENT);
         params.setMargins(
                 endX,
-                (int)(getWindowManager().getDefaultDisplay().getHeight()*0.333),
+                (int) (getWindowManager().getDefaultDisplay().getHeight() * 0.333),
                 -mStartMarker.getWidth(),
                 -mStartMarker.getHeight());
         mEndMarker.setLayoutParams(params);
+        if(mtimeflag!=null) {
+            Pattern p = Pattern.compile("[0-9]");
+            Matcher m = p.matcher(mtimeflag);
+            if(m.find())
+                minute=Integer.parseInt(m.group());
+            p = Pattern.compile(":[0-9]+");
+            m = p.matcher(mtimeflag);
+            if(m.find()) {
+                p = Pattern.compile("[0-9]+");
+                m = p.matcher(m.group());
+            }
+            if(m.find())
+                seconds=Integer.parseInt(m.group());
+            if(minute!=0)
+            {
+                counts=minute*60000;
+            }
+            else
+            {
+                counts=seconds*1000;
+            }
+        }
+
+        //Toast.makeText(EditActivity.this,Double.toString(counts),Toast.LENGTH_SHORT).show();
+        cutstartposition = (long) (((startX + mStartMarker.getWidth()/ 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * counts)+mOffsetstart*1000;
+        cutfinalposition = (long) (((endX + mEndMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * counts)+mOffsetend*1000;
+        /*
+        if(duration/1000>120) {
+            Toast.makeText(EditActivity.this,mtimeflag,Toast.LENGTH_SHORT).show();
+            cutstartposition = (int) (((startX + mStartMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * 60000);
+            cutfinalposition = (int) (((endX + mEndMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * 60000);
+        }
+        else if(duration/1000<=120&&duration/1000>20)
+        {
+            Toast.makeText(EditActivity.this,mtimeflag,Toast.LENGTH_SHORT).show();
+            cutstartposition = (int) (((startX + mStartMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * 30000);
+            cutfinalposition = (int) (((endX + mEndMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * 30000);
+        }
+        else if(duration/1000<=20&&duration/1000>7)
+        {
+            Toast.makeText(EditActivity.this,mtimeflag,Toast.LENGTH_SHORT).show();
+            cutstartposition = (int) (((startX + mStartMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * 15000);
+            cutfinalposition = (int) (((endX + mEndMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * 15000);
+        }
+        else if(duration/1000>0&&duration/1000<=7)
+        {
+            Toast.makeText(EditActivity.this,mtimeflag,Toast.LENGTH_SHORT).show();
+            cutstartposition = (int) (((startX + mStartMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * 6000);
+            cutfinalposition = (int) (((endX + mEndMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * 6000);
+        }*/
+        Toast.makeText(EditActivity.this,Long.toString(cutfinalposition),Toast.LENGTH_SHORT).show();
         updatedotdisplay();
     }
 
@@ -778,41 +845,181 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     }
 
     private void updatedotdisplay() {
-        int mOffset1=mOffset;
+        int mOffset1 = mOffset;
         if (System.currentTimeMillis() - curretntime > 1000) {
-            RelativeLayout dynamiclayout = (RelativeLayout) findViewById(R.id.dynamiclayout);
-            if (bookmarklist.size() != 0) {
-                for (int k = 0; k < bookmarklist.size(); k++) {
-                    dynamiclayout.removeView(bookmarklist.get(k));
+            /*if ( duration/ 1000 > 120) {
+                RelativeLayout dynamiclayout = (RelativeLayout) findViewById(R.id.dynamiclayout);
+                if (bookmarklist.size() != 0) {
+                    for (int k = 0; k < bookmarklist.size(); k++) {
+                        dynamiclayout.removeView(bookmarklist.get(k));
+                    }
                 }
-            }
-            //Toast.makeText(EditActivity.this,Integer.toString(mOffset),Toast.LENGTH_SHORT).show();
-            for (int i = 0; i < dataList.size(); i++) {
-                if ((int) ((dataList.getitem(i).getBookmarktime() / 60000.0) * dynamiclayout.getWidth()) - mOffset1 >= 0) {
-                    //Toast.makeText(EditActivity.this,Integer.toString(dataList.getitem(i).getBookmarktime()/1000),Toast.LENGTH_SHORT).show();
-                    TextView bookmark = new TextView(this);
-                    //bookmark.setId(110);
-                    bookmark.setText("●");
-                    bookmark.setId(dataList.getitem(i).getBookmarktime() / 1000);
-                    bookmark.setTextColor(android.graphics.Color.RED);
-                    RelativeLayout.LayoutParams lp1 = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
-                            RelativeLayout.LayoutParams.WRAP_CONTENT);
-                    lp1.setMargins((int) ((dataList.getitem(i).getBookmarktime() / 60000.0) * getWindowManager().getDefaultDisplay().getWidth()) - mOffset1
-                            , (int) (getWindowManager().getDefaultDisplay().getHeight() * 0.2), bookmark.getWidth(), bookmark.getHeight());
+                //Toast.makeText(EditActivity.this,Integer.toString(mOffset),Toast.LENGTH_SHORT).show();
+                for (int i = 0; i < dataList.size(); i++) {
+                    if ((int) ((dataList.getitem(i).getBookmarktime() / 60000.0) * dynamiclayout.getWidth()) - mOffset1 >= 0) {
+                        //Toast.makeText(EditActivity.this,Integer.toString(dataList.getitem(i).getBookmarktime()/1000),Toast.LENGTH_SHORT).show();
+                        TextView bookmark = new TextView(this);
+                        //bookmark.setId(110);
+                        bookmark.setText("●");
+                        bookmark.setId(dataList.getitem(i).getBookmarktime() / 1000);
+                        bookmark.setTextColor(android.graphics.Color.RED);
+                        RelativeLayout.LayoutParams lp1 = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+                                RelativeLayout.LayoutParams.WRAP_CONTENT);
+                        lp1.setMargins((int) ((dataList.getitem(i).getBookmarktime() / 60000.0) * dynamiclayout.getWidth()) - mOffset1
+                                , (int) (getWindowManager().getDefaultDisplay().getHeight() * 0.2), bookmark.getWidth(), bookmark.getHeight());
 //        lp1.addRule(RelativeLayout.ALIGN_TOP);
 //        lp1.setMargins(30, 50, 100, 100);//(int left, int top, int right, int bottom)
-                    dynamiclayout.addView(bookmark, lp1);
-                    bookmarklist.add(bookmark);
-                } else {
-                    //Toast.makeText(EditActivity.this,"delete",Toast.LENGTH_SHORT).show();
-                    for (int j = 0; j < bookmarklist.size(); j++) {
-                        // Toast.makeText(EditActivity.this,bookmarklist.get(j).getText().toString(),Toast.LENGTH_SHORT).show();
-                        if (bookmarklist.get(j).getId() == dataList.getitem(i).getBookmarktime() / 1000)
-                            dynamiclayout.removeView(bookmarklist.get(j));
+                        dynamiclayout.addView(bookmark, lp1);
+                        bookmarklist.add(bookmark);
+                    } else {
+                        //Toast.makeText(EditActivity.this,"delete",Toast.LENGTH_SHORT).show();
+                        for (int j = 0; j < bookmarklist.size(); j++) {
+                            // Toast.makeText(EditActivity.this,bookmarklist.get(j).getText().toString(),Toast.LENGTH_SHORT).show();
+                            if (bookmarklist.get(j).getId() == dataList.getitem(i).getBookmarktime() / 1000)
+                                dynamiclayout.removeView(bookmarklist.get(j));
+                        }
                     }
                 }
             }
-        }
-    }
 
+           else if ( duration/ 1000<=120&&duration/1000>20) {
+                RelativeLayout dynamiclayout = (RelativeLayout) findViewById(R.id.dynamiclayout);
+                if (bookmarklist.size() != 0) {
+                    for (int k = 0; k < bookmarklist.size(); k++) {
+                        dynamiclayout.removeView(bookmarklist.get(k));
+                    }
+                }
+                //Toast.makeText(EditActivity.this,Integer.toString(mOffset),Toast.LENGTH_SHORT).show();
+                for (int i = 0; i < dataList.size(); i++) {
+                    if ((int) ((dataList.getitem(i).getBookmarktime() / 30000.0) * dynamiclayout.getWidth()) - mOffset1 >= 0) {
+                        //Toast.makeText(EditActivity.this,Integer.toString(dataList.getitem(i).getBookmarktime()/1000),Toast.LENGTH_SHORT).show();
+                        TextView bookmark = new TextView(this);
+                        //bookmark.setId(110);
+                        bookmark.setText("●");
+                        bookmark.setId(dataList.getitem(i).getBookmarktime() / 1000);
+                        bookmark.setTextColor(android.graphics.Color.RED);
+                        RelativeLayout.LayoutParams lp1 = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+                                RelativeLayout.LayoutParams.WRAP_CONTENT);
+                        lp1.setMargins((int) ((dataList.getitem(i).getBookmarktime() / 30000.0) * dynamiclayout.getWidth()) - mOffset1
+                                , (int) (getWindowManager().getDefaultDisplay().getHeight() * 0.2), bookmark.getWidth(), bookmark.getHeight());
+//        lp1.addRule(RelativeLayout.ALIGN_TOP);
+//        lp1.setMargins(30, 50, 100, 100);//(int left, int top, int right, int bottom)
+                        dynamiclayout.addView(bookmark, lp1);
+                        bookmarklist.add(bookmark);
+                    } else {
+                        //Toast.makeText(EditActivity.this,"delete",Toast.LENGTH_SHORT).show();
+                        for (int j = 0; j < bookmarklist.size(); j++) {
+                            // Toast.makeText(EditActivity.this,bookmarklist.get(j).getText().toString(),Toast.LENGTH_SHORT).show();
+                            if (bookmarklist.get(j).getId() == dataList.getitem(i).getBookmarktime() / 1000)
+                                dynamiclayout.removeView(bookmarklist.get(j));
+                        }
+                    }
+                }
+            }
+
+            if ( duration/ 1000<=20&&duration/1000>7) {
+                RelativeLayout dynamiclayout = (RelativeLayout) findViewById(R.id.dynamiclayout);
+                if (bookmarklist.size() != 0) {
+                    for (int k = 0; k < bookmarklist.size(); k++) {
+                        dynamiclayout.removeView(bookmarklist.get(k));
+                    }
+                }
+                //Toast.makeText(EditActivity.this,Integer.toString(mOffset),Toast.LENGTH_SHORT).show();
+                for (int i = 0; i < dataList.size(); i++) {
+                    if ((int) ((dataList.getitem(i).getBookmarktime() / 15000.0) * dynamiclayout.getWidth()) - mOffset1 >= 0) {
+                        //Toast.makeText(EditActivity.this,Integer.toString(dataList.getitem(i).getBookmarktime()/1000),Toast.LENGTH_SHORT).show();
+                        TextView bookmark = new TextView(this);
+                        //bookmark.setId(110);
+                        bookmark.setText("●");
+                        bookmark.setId(dataList.getitem(i).getBookmarktime() / 1000);
+                        bookmark.setTextColor(android.graphics.Color.RED);
+                        RelativeLayout.LayoutParams lp1 = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+                                RelativeLayout.LayoutParams.WRAP_CONTENT);
+                        lp1.setMargins((int) ((dataList.getitem(i).getBookmarktime() / 15000.0) * dynamiclayout.getWidth()) - mOffset1
+                                , (int) (getWindowManager().getDefaultDisplay().getHeight() * 0.2), bookmark.getWidth(), bookmark.getHeight());
+//        lp1.addRule(RelativeLayout.ALIGN_TOP);
+//        lp1.setMargins(30, 50, 100, 100);//(int left, int top, int right, int bottom)
+                        dynamiclayout.addView(bookmark, lp1);
+                        bookmarklist.add(bookmark);
+                    } else {
+                        //Toast.makeText(EditActivity.this,"delete",Toast.LENGTH_SHORT).show();
+                        for (int j = 0; j < bookmarklist.size(); j++) {
+                            // Toast.makeText(EditActivity.this,bookmarklist.get(j).getText().toString(),Toast.LENGTH_SHORT).show();
+                            if (bookmarklist.get(j).getId() == dataList.getitem(i).getBookmarktime() / 1000)
+                                dynamiclayout.removeView(bookmarklist.get(j));
+                        }
+                    }
+                }
+            }
+            if ( duration/ 1000 >=0&&duration/1000<7) {
+                RelativeLayout dynamiclayout = (RelativeLayout) findViewById(R.id.dynamiclayout);
+                if (bookmarklist.size() != 0) {
+                    for (int k = 0; k < bookmarklist.size(); k++) {
+                        dynamiclayout.removeView(bookmarklist.get(k));
+                    }
+                }
+                //Toast.makeText(EditActivity.this,Integer.toString(mOffset),Toast.LENGTH_SHORT).show();
+                for (int i = 0; i < dataList.size(); i++) {
+                    if ((int) ((dataList.getitem(i).getBookmarktime() / 6000.0) * dynamiclayout.getWidth()) - mOffset1 >= 0) {
+                        //Toast.makeText(EditActivity.this,Integer.toString(dataList.getitem(i).getBookmarktime()/1000),Toast.LENGTH_SHORT).show();
+                        TextView bookmark = new TextView(this);
+                        //bookmark.setId(110);
+                        bookmark.setText("●");
+                        bookmark.setId(dataList.getitem(i).getBookmarktime() / 1000);
+                        bookmark.setTextColor(android.graphics.Color.RED);
+                        RelativeLayout.LayoutParams lp1 = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+                                RelativeLayout.LayoutParams.WRAP_CONTENT);
+                        lp1.setMargins((int) ((dataList.getitem(i).getBookmarktime() / 6000.0) * dynamiclayout.getWidth()) - mOffset1
+                                , (int) (getWindowManager().getDefaultDisplay().getHeight() * 0.2), bookmark.getWidth(), bookmark.getHeight());
+//        lp1.addRule(RelativeLayout.ALIGN_TOP);
+//        lp1.setMargins(30, 50, 100, 100);//(int left, int top, int right, int bottom)
+                        dynamiclayout.addView(bookmark, lp1);
+                        bookmarklist.add(bookmark);
+                    } else {
+                        //Toast.makeText(EditActivity.this,"delete",Toast.LENGTH_SHORT).show();
+                        for (int j = 0; j < bookmarklist.size(); j++) {
+                            // Toast.makeText(EditActivity.this,bookmarklist.get(j).getText().toString(),Toast.LENGTH_SHORT).show();
+                            if (bookmarklist.get(j).getId() == dataList.getitem(i).getBookmarktime() / 1000)
+                                dynamiclayout.removeView(bookmarklist.get(j));
+                        }
+                    }
+                }
+
+            }*/
+                RelativeLayout dynamiclayout = (RelativeLayout) findViewById(R.id.dynamiclayout);
+                if (bookmarklist.size() != 0) {
+                    for (int k = 0; k < bookmarklist.size(); k++) {
+                        dynamiclayout.removeView(bookmarklist.get(k));
+                    }
+                }
+                //Toast.makeText(EditActivity.this,Integer.toString(mOffset),Toast.LENGTH_SHORT).show();
+                for (int i = 0; i < dataList.size(); i++) {
+                    if ((int) ((dataList.getitem(i).getBookmarktime() / counts) * dynamiclayout.getWidth()) - mOffset1 >= 0) {
+                        //Toast.makeText(EditActivity.this,Integer.toString(dataList.getitem(i).getBookmarktime()/1000),Toast.LENGTH_SHORT).show();
+                        TextView bookmark = new TextView(this);
+                        //bookmark.setId(110);
+                        bookmark.setText("●");
+                        bookmark.setId(dataList.getitem(i).getBookmarktime() / 1000);
+                        bookmark.setTextColor(android.graphics.Color.RED);
+                        RelativeLayout.LayoutParams lp1 = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+                                RelativeLayout.LayoutParams.WRAP_CONTENT);
+                        lp1.setMargins((int) ((dataList.getitem(i).getBookmarktime() / counts) * dynamiclayout.getWidth()) - mOffset1
+                                , (int) (getWindowManager().getDefaultDisplay().getHeight() * 0.2), bookmark.getWidth(), bookmark.getHeight());
+//        lp1.addRule(RelativeLayout.ALIGN_TOP);
+//        lp1.setMargins(30, 50, 100, 100);//(int left, int top, int right, int bottom)
+                        dynamiclayout.addView(bookmark, lp1);
+                        bookmarklist.add(bookmark);
+                    } else {
+                        //Toast.makeText(EditActivity.this,"delete",Toast.LENGTH_SHORT).show();
+                        for (int j = 0; j < bookmarklist.size(); j++) {
+                            // Toast.makeText(EditActivity.this,bookmarklist.get(j).getText().toString(),Toast.LENGTH_SHORT).show();
+                            if (bookmarklist.get(j).getId() == dataList.getitem(i).getBookmarktime() / 1000)
+                                dynamiclayout.removeView(bookmarklist.get(j));
+                        }
+                    }
+                }
+
+        }
+
+    }
 }

@@ -80,10 +80,10 @@ public class WaveformView extends View {
     private GestureDetector mGestureDetector;
     private ScaleGestureDetector mScaleGestureDetector;
     private boolean mInitialized;
+    public String timeflag;
 
     public WaveformView(Context context, AttributeSet attrs) {
         super(context, attrs);
-
         // We don't want keys, the markers get these
         setFocusable(false);
 
@@ -425,7 +425,9 @@ public class WaveformView extends View {
                 if ((integerSecs % 60) < 10) {
                     timecodeSeconds = "0" + timecodeSeconds;
                 }
-                String timecodeStr = timecodeMinutes + ":" + timecodeSeconds;
+                String timecodeStr = new String();
+                 timecodeStr = timecodeMinutes + ":" + timecodeSeconds;
+                timeflag=timecodeStr;
                 float offset = (float) (
                     0.5 * mTimecodePaint.measureText(timecodeStr));
                 canvas.drawText(timecodeStr,
