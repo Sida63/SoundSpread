@@ -459,7 +459,6 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             int saveStart = mStartPos;
             mStartPos = trap(mStartPos - velocity);
             mEndPos = trap(mEndPos - (saveStart - mStartPos));
-            mOffsetstart=mOffset;
          //   setOffsetGoalStart();
         }
 
@@ -470,7 +469,6 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             } else {
                 mEndPos = trap(mEndPos - velocity);
             }
-            mOffsetend=mOffset;
          //   setOffsetGoalEnd();
         }
 
@@ -746,12 +744,21 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             else
             {
                 counts=seconds*1000;
+                if(counts>15000&&counts<30000)
+                    counts=30000;
+                else if(counts>6000&&counts<15000)
+                    counts=15000;
+                else if(counts>0&&counts<6000)
+                    counts=6000;
             }
         }
 
         //Toast.makeText(EditActivity.this,Double.toString(counts),Toast.LENGTH_SHORT).show();
-        cutstartposition = (long) (((startX + mStartMarker.getWidth()/ 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * counts)+mOffsetstart*1000;
-        cutfinalposition = (long) (((endX + mEndMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * counts)+mOffsetend*1000;
+        cutstartposition = (long) ((mStartPos*1.0 / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * counts);
+        cutfinalposition = (long) ((mEndPos*1.0 / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * counts);
+        //Toast.makeText(EditActivity.this,Double.toString(counts),Toast.LENGTH_SHORT).show();
+       //Toast.makeText(EditActivity.this,Long.toString(cutfinalposition),Toast.LENGTH_SHORT).show();
+        //Toast.makeText(EditActivity.this,Integer.toString(mOffset),Toast.LENGTH_SHORT).show();
         /*
         if(duration/1000>120) {
             Toast.makeText(EditActivity.this,mtimeflag,Toast.LENGTH_SHORT).show();
@@ -776,7 +783,6 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             cutstartposition = (int) (((startX + mStartMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * 6000);
             cutfinalposition = (int) (((endX + mEndMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * 6000);
         }*/
-        Toast.makeText(EditActivity.this,Long.toString(cutfinalposition),Toast.LENGTH_SHORT).show();
         updatedotdisplay();
     }
 
