@@ -141,23 +141,78 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         mMaxPos = 0;
         mLastDisplayedStartPos = -1;
         mLastDisplayedEndPos = -1;
-        mLoadingLastUpdateTime = getCurrentTime();
         mFilename=musicname;
         mFile = new File(mFilename);
+
+        mLoadingLastUpdateTime = getCurrentTime();
+        mLoadingKeepGoing = true;
+        mFinishActivity = false;
+
+        mPlayer = null;
+        mProgressDialog=null;
+        mProgressDialog = new ProgressDialog(EditActivity.this);
+        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        mProgressDialog.setTitle("Loading");
+        mProgressDialog.setCancelable(true);
+        mProgressDialog.setOnCancelListener(
+                new DialogInterface.OnCancelListener() {
+                    public void onCancel(DialogInterface dialog) {
+                        mLoadingKeepGoing = false;
+                        mFinishActivity = true;
+                    }
+                });
+        mProgressDialog.show();
+
+        final SoundFile.ProgressListener listener =
+                new SoundFile.ProgressListener() {
+                    public boolean reportProgress(double fractionComplete) {
+                        long now = getCurrentTime();
+                        if (now - mLoadingLastUpdateTime > 100) {
+                            mProgressDialog.setProgress(
+                                    (int) (mProgressDialog.getMax() * fractionComplete));
+                            mLoadingLastUpdateTime = now;
+                        }
+                        return mLoadingKeepGoing;
+                    }
+                };
+
+
         try {
-           // mSoundFile = SoundFile.create("/mnt/sdcard/soundspread/Sponge bob.mp3");
-            mSoundFile = SoundFile.create(musicname);
-            duration=MediaPlayer.create(this, Uri.parse(musicname)).getDuration();
+            // mSoundFile = SoundFile.create("/mnt/sdcard/soundspread/Sponge bob.mp3");
+            mSoundFile = SoundFile.create(musicname, listener);
+            duration = MediaPlayer.create(EditActivity.this, Uri.parse(musicname)).getDuration();
             //mSoundFile = SoundFile.create("/mnt/sdcard/soundspread/clip/test.mp3");
+
         } catch (IOException e) {
             e.printStackTrace();
+            //        mProgressDialog.dismiss();
         } catch (SoundFile.InvalidInputException e) {
             e.printStackTrace();
+            //        mProgressDialog.dismiss();
         }
+
+        mLoadSoundFileThread=null;
+        mLoadSoundFileThread = new Thread() {
+            public void run() {
+                try {
+                    // mSoundFile = SoundFile.create("/mnt/sdcard/soundspread/Sponge bob.mp3");
+                    //mSoundFile = SoundFile.create("/mnt/sdcard/soundspread/clip/test.mp3");
+                      mPlayer = new SamplePlayer(mSoundFile);
+                } catch (Exception e) {
+                    e.printStackTrace();
+            //        mProgressDialog.dismiss();
+                }
+               mProgressDialog.dismiss();
+            }
+        };
+        mLoadSoundFileThread.start();
+
+
+
         mWaveformView = (WaveformView)findViewById(R.id.waveform);
         mWaveformView.setListener(this);
         if (mSoundFile != null && !mWaveformView.hasSoundFile()) {
-            Toast.makeText(EditActivity.this,"input",Toast.LENGTH_SHORT).show();
+            //Toast.makeText(EditActivity.this,"input",Toast.LENGTH_SHORT).show();
             mWaveformView.setSoundFile(mSoundFile);
             mWaveformView.recomputeHeights(mDensity);
             mMaxPos = mWaveformView.maxPos();
@@ -275,7 +330,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
 
 
     private void loadplayer() {
-        mPlayer = null;
+
         mIsPlaying = false;
         mPlayButton = (ImageButton)findViewById(R.id.play);
         mPlayButton.setOnClickListener(mPlayListener);
@@ -285,20 +340,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         mFfwdButton.setOnClickListener(mFfwdListener);
         resetPositions();
 
-        new Thread() {
-            public void run() {
-            //    mCanSeekAccurately = SeekTest.CanSeekAccurately(
-            //            getPreferences(Context.MODE_PRIVATE));
 
-            //    System.out.println("Seek test done, creating media player.");
-                try {
-                    mPlayer = new SamplePlayer(mSoundFile);
-                } catch (final Exception e) {
-
-                    e.printStackTrace();
-                };
-            }
-        }.start();
 
     }
 
@@ -319,6 +361,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
 
         if (mPlayer == null) {
             // Not initialized yet
+            Toast.makeText(EditActivity.this,"no player",Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -612,9 +655,13 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             mtimeflag = mWaveformView.timeflag;
         }
         if (mIsPlaying) {
-            int frames = mWaveformView.millisecsToPixels(0);//set the default value, which can be replaced by the position of the player
+            int now = mPlayer.getCurrentPosition();
+            int frames = mWaveformView.millisecsToPixels(now);//set the default value, which can be replaced by the position of the player
             mWaveformView.setPlayback(frames);
             setOffsetGoalNoUpdate(frames - mWidth / 2);
+            if (now >= mPlayEndMsec) {
+                handlePause();
+            }
         }
         if (!mTouchDragging) {
             int offsetDelta;
