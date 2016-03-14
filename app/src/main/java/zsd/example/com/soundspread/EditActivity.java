@@ -5,14 +5,17 @@ import android.content.Context;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -118,18 +121,19 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     private double counts=1;
     private int mOffsetstart;
     private int mOffsetend;
+    private ProgressDialog dialog;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_edit);
+        Intent intent=getIntent();
+        Bundle bundle = intent.getExtras();
+        musicname = (String) bundle.getSerializable("uri");
+        dataList=(DataList)bundle.getSerializable("datalist");
+        Uri uri= Uri.parse(musicname);
         curretntime=System.currentTimeMillis();
         cutstartposition=0;
         cutfinalposition=0;
         bookmarklist=new ArrayList<TextView>();
-        Intent intent=getIntent();
-        Bundle bundle = intent.getExtras();
-        musicname = (String) bundle.getSerializable("uri");
-        Uri uri= Uri.parse(musicname);
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         mDensity = metrics.density;
@@ -143,12 +147,11 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         mLastDisplayedEndPos = -1;
         mFilename=musicname;
         mFile = new File(mFilename);
-
+        mPlayer = null;
+        loadgui();
         mLoadingLastUpdateTime = getCurrentTime();
         mLoadingKeepGoing = true;
         mFinishActivity = false;
-
-        mPlayer = null;
         mProgressDialog=null;
         mProgressDialog = new ProgressDialog(EditActivity.this);
         mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
@@ -162,7 +165,6 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                     }
                 });
         mProgressDialog.show();
-
         final SoundFile.ProgressListener listener =
                 new SoundFile.ProgressListener() {
                     public boolean reportProgress(double fractionComplete) {
@@ -175,40 +177,54 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                         return mLoadingKeepGoing;
                     }
                 };
-
-
-        try {
-            // mSoundFile = SoundFile.create("/mnt/sdcard/soundspread/Sponge bob.mp3");
-            mSoundFile = SoundFile.create(musicname, listener);
-            duration = MediaPlayer.create(EditActivity.this, Uri.parse(musicname)).getDuration();
-            //mSoundFile = SoundFile.create("/mnt/sdcard/soundspread/clip/test.mp3");
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            //        mProgressDialog.dismiss();
-        } catch (SoundFile.InvalidInputException e) {
-            e.printStackTrace();
-            //        mProgressDialog.dismiss();
-        }
-
-        mLoadSoundFileThread=null;
         mLoadSoundFileThread = new Thread() {
             public void run() {
                 try {
-                    // mSoundFile = SoundFile.create("/mnt/sdcard/soundspread/Sponge bob.mp3");
-                    //mSoundFile = SoundFile.create("/mnt/sdcard/soundspread/clip/test.mp3");
-                      mPlayer = new SamplePlayer(mSoundFile);
-                } catch (Exception e) {
+                    mSoundFile = SoundFile.create(mFile.getAbsolutePath(), listener);
+
+                    if (mSoundFile == null) {
+                        mProgressDialog.dismiss();
+                        String name = mFile.getName().toLowerCase();
+                        String[] components = name.split("\\.");
+                        String err;
+                        if (components.length < 2) {
+                        } else {
+                        }
+                        return;
+                    }
+                    mPlayer = new SamplePlayer(mSoundFile);
+                } catch (final Exception e) {
+                    mProgressDialog.dismiss();
                     e.printStackTrace();
-            //        mProgressDialog.dismiss();
+                    mInfoContent = e.toString();
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            mInfo.setText(mInfoContent);
+                        }
+                    });
+                    return;
                 }
-               mProgressDialog.dismiss();
+                mProgressDialog.dismiss();
+                if (mLoadingKeepGoing) {
+                    Runnable runnable = new Runnable() {
+                        public void run() {
+                            finishOpeningSoundFile();
+                        }
+                    };
+                    mHandler.post(runnable);
+                } else if (mFinishActivity){
+                    EditActivity.this.finish();
+                }
             }
         };
         mLoadSoundFileThread.start();
+        instance = this;
 
+    }
 
-
+    private void loadgui()
+    {
+        setContentView(R.layout.activity_edit);
         mWaveformView = (WaveformView)findViewById(R.id.waveform);
         mWaveformView.setListener(this);
         if (mSoundFile != null && !mWaveformView.hasSoundFile()) {
@@ -235,7 +251,6 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         mEndMarker.setFocusable(true);
         mEndMarker.setFocusableInTouchMode(true);
         mEndVisible = true;
-
         //Toast.makeText(EditActivity.this, musicname, Toast.LENGTH_SHORT).show();
         clipaudio=(Button)findViewById(R.id.clipaudio);
         clipaudio.setOnClickListener(new View.OnClickListener() {
@@ -268,66 +283,8 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                 startActivity(intent);
             }
         });
-
-
-        dataList=(DataList)bundle.getSerializable("datalist");
-        //Toast.makeText(EditActivity.this,Long.toString(dataList.getitem(0).getBookmarktime()),Toast.LENGTH_SHORT).show();
-        /*
-        spinner = (Spinner) findViewById(R.id.showbookmark);
-        spinner1 = (Spinner) findViewById(R.id.shownextbookmark);
-        String[] mItems=new String[dataList.size()];
-        int transtime,min,sec;
-        for(int i=0;i<dataList.size();i++)
-        {
-            transtime=dataList.getitem(i).getBookmarktime()/1000;
-            min = transtime/60;
-            sec = transtime%60;
-            if (sec<10) {
-                mItems[i]=Integer.toString(min)+":0"+Integer.toString(sec);
-            }else{
-                mItems[i]=Integer.toString(min)+":"+Integer.toString(sec);
-            }
-
-        }
-        ArrayAdapter<String> adapter=new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item, mItems);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view,
-                                       int pos, long id) {
-                firstbookmark=dataList.getitem(pos).getBookmarktime();
-               // Toast.makeText(EditActivity.this, Long.toString(firstbookmark), Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // Another interface callback
-            }
-        });
-        spinner1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view,
-                                       int pos, long id) {
-                secondbookmark=dataList.getitem(pos).getBookmarktime();
-               // Toast.makeText(EditActivity.this,Long.toString(secondbookmark),Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // Another interface callback
-            }
-        });
-        spinner.setAdapter(adapter);
-        spinner1.setAdapter(adapter);
-        */
-
         updateDisplay();
-        instance = this;
-
-
     }
-
-
 
     private void loadplayer() {
 
@@ -338,7 +295,6 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         mRewindButton.setOnClickListener(mRewindListener);
         mFfwdButton = (ImageButton)findViewById(R.id.ffwd);
         mFfwdButton.setOnClickListener(mFfwdListener);
-        resetPositions();
 
 
 
@@ -803,33 +759,6 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         //Toast.makeText(EditActivity.this,Double.toString(counts),Toast.LENGTH_SHORT).show();
         cutstartposition = (long) ((mStartPos*1.0 / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * counts);
         cutfinalposition = (long) ((mEndPos*1.0 / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * counts);
-        //Toast.makeText(EditActivity.this,Double.toString(counts),Toast.LENGTH_SHORT).show();
-       //Toast.makeText(EditActivity.this,Long.toString(cutfinalposition),Toast.LENGTH_SHORT).show();
-        //Toast.makeText(EditActivity.this,Integer.toString(mOffset),Toast.LENGTH_SHORT).show();
-        /*
-        if(duration/1000>120) {
-            Toast.makeText(EditActivity.this,mtimeflag,Toast.LENGTH_SHORT).show();
-            cutstartposition = (int) (((startX + mStartMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * 60000);
-            cutfinalposition = (int) (((endX + mEndMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * 60000);
-        }
-        else if(duration/1000<=120&&duration/1000>20)
-        {
-            Toast.makeText(EditActivity.this,mtimeflag,Toast.LENGTH_SHORT).show();
-            cutstartposition = (int) (((startX + mStartMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * 30000);
-            cutfinalposition = (int) (((endX + mEndMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * 30000);
-        }
-        else if(duration/1000<=20&&duration/1000>7)
-        {
-            Toast.makeText(EditActivity.this,mtimeflag,Toast.LENGTH_SHORT).show();
-            cutstartposition = (int) (((startX + mStartMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * 15000);
-            cutfinalposition = (int) (((endX + mEndMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * 15000);
-        }
-        else if(duration/1000>0&&duration/1000<=7)
-        {
-            Toast.makeText(EditActivity.this,mtimeflag,Toast.LENGTH_SHORT).show();
-            cutstartposition = (int) (((startX + mStartMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * 6000);
-            cutfinalposition = (int) (((endX + mEndMarker.getWidth() / 2.0) / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * 6000);
-        }*/
         updatedotdisplay();
     }
 
@@ -900,145 +829,6 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     private void updatedotdisplay() {
         int mOffset1 = mOffset;
         if (System.currentTimeMillis() - curretntime > 1000) {
-            /*if ( duration/ 1000 > 120) {
-                RelativeLayout dynamiclayout = (RelativeLayout) findViewById(R.id.dynamiclayout);
-                if (bookmarklist.size() != 0) {
-                    for (int k = 0; k < bookmarklist.size(); k++) {
-                        dynamiclayout.removeView(bookmarklist.get(k));
-                    }
-                }
-                //Toast.makeText(EditActivity.this,Integer.toString(mOffset),Toast.LENGTH_SHORT).show();
-                for (int i = 0; i < dataList.size(); i++) {
-                    if ((int) ((dataList.getitem(i).getBookmarktime() / 60000.0) * dynamiclayout.getWidth()) - mOffset1 >= 0) {
-                        //Toast.makeText(EditActivity.this,Integer.toString(dataList.getitem(i).getBookmarktime()/1000),Toast.LENGTH_SHORT).show();
-                        TextView bookmark = new TextView(this);
-                        //bookmark.setId(110);
-                        bookmark.setText("●");
-                        bookmark.setId(dataList.getitem(i).getBookmarktime() / 1000);
-                        bookmark.setTextColor(android.graphics.Color.RED);
-                        RelativeLayout.LayoutParams lp1 = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
-                                RelativeLayout.LayoutParams.WRAP_CONTENT);
-                        lp1.setMargins((int) ((dataList.getitem(i).getBookmarktime() / 60000.0) * dynamiclayout.getWidth()) - mOffset1
-                                , (int) (getWindowManager().getDefaultDisplay().getHeight() * 0.2), bookmark.getWidth(), bookmark.getHeight());
-//        lp1.addRule(RelativeLayout.ALIGN_TOP);
-//        lp1.setMargins(30, 50, 100, 100);//(int left, int top, int right, int bottom)
-                        dynamiclayout.addView(bookmark, lp1);
-                        bookmarklist.add(bookmark);
-                    } else {
-                        //Toast.makeText(EditActivity.this,"delete",Toast.LENGTH_SHORT).show();
-                        for (int j = 0; j < bookmarklist.size(); j++) {
-                            // Toast.makeText(EditActivity.this,bookmarklist.get(j).getText().toString(),Toast.LENGTH_SHORT).show();
-                            if (bookmarklist.get(j).getId() == dataList.getitem(i).getBookmarktime() / 1000)
-                                dynamiclayout.removeView(bookmarklist.get(j));
-                        }
-                    }
-                }
-            }
-
-           else if ( duration/ 1000<=120&&duration/1000>20) {
-                RelativeLayout dynamiclayout = (RelativeLayout) findViewById(R.id.dynamiclayout);
-                if (bookmarklist.size() != 0) {
-                    for (int k = 0; k < bookmarklist.size(); k++) {
-                        dynamiclayout.removeView(bookmarklist.get(k));
-                    }
-                }
-                //Toast.makeText(EditActivity.this,Integer.toString(mOffset),Toast.LENGTH_SHORT).show();
-                for (int i = 0; i < dataList.size(); i++) {
-                    if ((int) ((dataList.getitem(i).getBookmarktime() / 30000.0) * dynamiclayout.getWidth()) - mOffset1 >= 0) {
-                        //Toast.makeText(EditActivity.this,Integer.toString(dataList.getitem(i).getBookmarktime()/1000),Toast.LENGTH_SHORT).show();
-                        TextView bookmark = new TextView(this);
-                        //bookmark.setId(110);
-                        bookmark.setText("●");
-                        bookmark.setId(dataList.getitem(i).getBookmarktime() / 1000);
-                        bookmark.setTextColor(android.graphics.Color.RED);
-                        RelativeLayout.LayoutParams lp1 = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
-                                RelativeLayout.LayoutParams.WRAP_CONTENT);
-                        lp1.setMargins((int) ((dataList.getitem(i).getBookmarktime() / 30000.0) * dynamiclayout.getWidth()) - mOffset1
-                                , (int) (getWindowManager().getDefaultDisplay().getHeight() * 0.2), bookmark.getWidth(), bookmark.getHeight());
-//        lp1.addRule(RelativeLayout.ALIGN_TOP);
-//        lp1.setMargins(30, 50, 100, 100);//(int left, int top, int right, int bottom)
-                        dynamiclayout.addView(bookmark, lp1);
-                        bookmarklist.add(bookmark);
-                    } else {
-                        //Toast.makeText(EditActivity.this,"delete",Toast.LENGTH_SHORT).show();
-                        for (int j = 0; j < bookmarklist.size(); j++) {
-                            // Toast.makeText(EditActivity.this,bookmarklist.get(j).getText().toString(),Toast.LENGTH_SHORT).show();
-                            if (bookmarklist.get(j).getId() == dataList.getitem(i).getBookmarktime() / 1000)
-                                dynamiclayout.removeView(bookmarklist.get(j));
-                        }
-                    }
-                }
-            }
-
-            if ( duration/ 1000<=20&&duration/1000>7) {
-                RelativeLayout dynamiclayout = (RelativeLayout) findViewById(R.id.dynamiclayout);
-                if (bookmarklist.size() != 0) {
-                    for (int k = 0; k < bookmarklist.size(); k++) {
-                        dynamiclayout.removeView(bookmarklist.get(k));
-                    }
-                }
-                //Toast.makeText(EditActivity.this,Integer.toString(mOffset),Toast.LENGTH_SHORT).show();
-                for (int i = 0; i < dataList.size(); i++) {
-                    if ((int) ((dataList.getitem(i).getBookmarktime() / 15000.0) * dynamiclayout.getWidth()) - mOffset1 >= 0) {
-                        //Toast.makeText(EditActivity.this,Integer.toString(dataList.getitem(i).getBookmarktime()/1000),Toast.LENGTH_SHORT).show();
-                        TextView bookmark = new TextView(this);
-                        //bookmark.setId(110);
-                        bookmark.setText("●");
-                        bookmark.setId(dataList.getitem(i).getBookmarktime() / 1000);
-                        bookmark.setTextColor(android.graphics.Color.RED);
-                        RelativeLayout.LayoutParams lp1 = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
-                                RelativeLayout.LayoutParams.WRAP_CONTENT);
-                        lp1.setMargins((int) ((dataList.getitem(i).getBookmarktime() / 15000.0) * dynamiclayout.getWidth()) - mOffset1
-                                , (int) (getWindowManager().getDefaultDisplay().getHeight() * 0.2), bookmark.getWidth(), bookmark.getHeight());
-//        lp1.addRule(RelativeLayout.ALIGN_TOP);
-//        lp1.setMargins(30, 50, 100, 100);//(int left, int top, int right, int bottom)
-                        dynamiclayout.addView(bookmark, lp1);
-                        bookmarklist.add(bookmark);
-                    } else {
-                        //Toast.makeText(EditActivity.this,"delete",Toast.LENGTH_SHORT).show();
-                        for (int j = 0; j < bookmarklist.size(); j++) {
-                            // Toast.makeText(EditActivity.this,bookmarklist.get(j).getText().toString(),Toast.LENGTH_SHORT).show();
-                            if (bookmarklist.get(j).getId() == dataList.getitem(i).getBookmarktime() / 1000)
-                                dynamiclayout.removeView(bookmarklist.get(j));
-                        }
-                    }
-                }
-            }
-            if ( duration/ 1000 >=0&&duration/1000<7) {
-                RelativeLayout dynamiclayout = (RelativeLayout) findViewById(R.id.dynamiclayout);
-                if (bookmarklist.size() != 0) {
-                    for (int k = 0; k < bookmarklist.size(); k++) {
-                        dynamiclayout.removeView(bookmarklist.get(k));
-                    }
-                }
-                //Toast.makeText(EditActivity.this,Integer.toString(mOffset),Toast.LENGTH_SHORT).show();
-                for (int i = 0; i < dataList.size(); i++) {
-                    if ((int) ((dataList.getitem(i).getBookmarktime() / 6000.0) * dynamiclayout.getWidth()) - mOffset1 >= 0) {
-                        //Toast.makeText(EditActivity.this,Integer.toString(dataList.getitem(i).getBookmarktime()/1000),Toast.LENGTH_SHORT).show();
-                        TextView bookmark = new TextView(this);
-                        //bookmark.setId(110);
-                        bookmark.setText("●");
-                        bookmark.setId(dataList.getitem(i).getBookmarktime() / 1000);
-                        bookmark.setTextColor(android.graphics.Color.RED);
-                        RelativeLayout.LayoutParams lp1 = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
-                                RelativeLayout.LayoutParams.WRAP_CONTENT);
-                        lp1.setMargins((int) ((dataList.getitem(i).getBookmarktime() / 6000.0) * dynamiclayout.getWidth()) - mOffset1
-                                , (int) (getWindowManager().getDefaultDisplay().getHeight() * 0.2), bookmark.getWidth(), bookmark.getHeight());
-//        lp1.addRule(RelativeLayout.ALIGN_TOP);
-//        lp1.setMargins(30, 50, 100, 100);//(int left, int top, int right, int bottom)
-                        dynamiclayout.addView(bookmark, lp1);
-                        bookmarklist.add(bookmark);
-                    } else {
-                        //Toast.makeText(EditActivity.this,"delete",Toast.LENGTH_SHORT).show();
-                        for (int j = 0; j < bookmarklist.size(); j++) {
-                            // Toast.makeText(EditActivity.this,bookmarklist.get(j).getText().toString(),Toast.LENGTH_SHORT).show();
-                            if (bookmarklist.get(j).getId() == dataList.getitem(i).getBookmarktime() / 1000)
-                                dynamiclayout.removeView(bookmarklist.get(j));
-                        }
-                    }
-                }
-
-            }*/
                 RelativeLayout dynamiclayout = (RelativeLayout) findViewById(R.id.dynamiclayout);
                 if (bookmarklist.size() != 0) {
                     for (int k = 0; k < bookmarklist.size(); k++) {
@@ -1074,5 +864,42 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
 
         }
 
+    }
+    private void finishOpeningSoundFile() {
+        mWaveformView.setSoundFile(mSoundFile);
+        mWaveformView.recomputeHeights(mDensity);
+
+        mMaxPos = mWaveformView.maxPos();
+        mLastDisplayedStartPos = -1;
+        mLastDisplayedEndPos = -1;
+
+        mTouchDragging = false;
+
+        mOffset = 0;
+        mOffsetGoal = 0;
+        mFlingVelocity = 0;
+        resetPositions();
+        if (mEndPos > mMaxPos)
+            mEndPos = mMaxPos;
+        updateDisplay();
+    }
+    public void onConfigurationChanged(Configuration newConfig) {
+        Log.v("Ringdroid", "EditActivity onConfigurationChanged");
+        final int saveZoomLevel = mWaveformView.getZoomLevel();
+        super.onConfigurationChanged(newConfig);
+
+        loadgui();
+
+        mHandler.postDelayed(new Runnable() {
+            public void run() {
+                mStartMarker.requestFocus();
+                markerFocus(mStartMarker);
+
+                mWaveformView.setZoomLevel(saveZoomLevel);
+                mWaveformView.recomputeHeights(mDensity);
+
+                updateDisplay();
+            }
+        }, 500);
     }
 }
