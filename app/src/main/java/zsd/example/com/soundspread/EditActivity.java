@@ -235,7 +235,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         }
         else
         {
-            Toast.makeText(EditActivity.this,"aout",Toast.LENGTH_SHORT).show();
+           // Toast.makeText(EditActivity.this,"aout",Toast.LENGTH_SHORT).show();
         }
         loadplayer();
         mStartMarker = (MarkerView)findViewById(R.id.startmarker);
@@ -266,6 +266,11 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                                     MP3File f = new MP3File(musicname);
                                     //Toast.makeText(EditActivity.this,et.getText().toString(),Toast.LENGTH_SHORT).show();
                                     f.cut(cutstartposition, cutfinalposition, et.getText().toString());
+                                    File filedir = new File("/mnt/sdcard/soundspread/clip/");
+                                    if(!filedir.exists())
+                                        filedir.mkdir();
+                                    String fileName = "/mnt/sdcard/soundspread/clip/" + et.getText().toString() + ".txt";
+
                                     Toast.makeText(EditActivity.this, "MP3 file is cut successfully", Toast.LENGTH_SHORT).show();
                                 } catch (Exception ex) {
                                     ex.printStackTrace();
@@ -322,8 +327,8 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         }
 
         try {
-            Toast.makeText(EditActivity.this,Integer.toString(mStartPos),Toast.LENGTH_SHORT).show();
-            Toast.makeText(EditActivity.this,Integer.toString(mEndPos),Toast.LENGTH_SHORT).show();
+           // Toast.makeText(EditActivity.this,Integer.toString(mStartPos),Toast.LENGTH_SHORT).show();
+          //  Toast.makeText(EditActivity.this,Integer.toString(mEndPos),Toast.LENGTH_SHORT).show();
 
             mPlayStartMsec = mWaveformView.pixelsToMillisecs(startPosition);
             if (startPosition < mStartPos) {
@@ -614,7 +619,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             int now = mPlayer.getCurrentPosition();
             int frames = mWaveformView.millisecsToPixels(now);//set the default value, which can be replaced by the position of the player
             mWaveformView.setPlayback(frames);
-            setOffsetGoalNoUpdate(frames - mWidth / 2);
+           // setOffsetGoalNoUpdate(frames - mWidth / 2);
             if (now >= mPlayEndMsec) {
                 handlePause();
             }

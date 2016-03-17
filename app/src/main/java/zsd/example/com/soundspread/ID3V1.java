@@ -65,6 +65,22 @@ public class ID3V1 {
         track = array[123];
         genre = array[124];
     }
+
+    public String getTag(String wantwhat){
+        String result="";
+        switch (wantwhat){
+            case "title": result=title;
+                break;
+            case "artist": result=artist;
+                break;
+            case "album": result=album;
+                break;
+            case "year": result=year;
+                break;
+        }
+        return result;
+    }
+
     public String toString(){
         StringBuffer buffer = new StringBuffer();
         buffer.append("标题="+title+"\n");
