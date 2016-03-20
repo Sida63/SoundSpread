@@ -45,6 +45,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     private long firstbookmark;
     private long secondbookmark;
     private long curretntime;
+    private int calculatecountsflag=0;
 
 
     private SamplePlayer mPlayer;
@@ -578,12 +579,28 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
 
     @Override
     public void waveformZoomIn() {
-
+        mWaveformView.zoomIn();
+        mStartPos = mWaveformView.getStart();
+        mEndPos = mWaveformView.getEnd();
+        mMaxPos = mWaveformView.maxPos();
+        mOffset = mWaveformView.getOffset();
+        mOffsetGoal = mOffset;
+        if (mWaveformView.canZoomIn())
+            counts=counts/2;
+        updateDisplay();
     }
 
     @Override
     public void waveformZoomOut() {
-
+        mWaveformView.zoomOut();
+        mStartPos = mWaveformView.getStart();
+        mEndPos = mWaveformView.getEnd();
+        mMaxPos = mWaveformView.maxPos();
+        mOffset = mWaveformView.getOffset();
+        mOffsetGoal = mOffset;
+        if (mWaveformView.canZoomOut())
+            counts=counts*2;
+        updateDisplay();
     }
    /* public void onItemSelected(AdapterView<?> parent,
                                View v, int position, long id) {
@@ -732,7 +749,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                 -mStartMarker.getWidth(),
                 -mStartMarker.getHeight());
         mEndMarker.setLayoutParams(params);
-        if(mtimeflag!=null) {
+        if(mtimeflag!=null&&calculatecountsflag==0) {
             Pattern p = Pattern.compile("[0-9]");
             Matcher m = p.matcher(mtimeflag);
             if(m.find())
@@ -748,6 +765,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             if(minute!=0)
             {
                 counts=minute*60000;
+                calculatecountsflag=1;
             }
             else
             {
@@ -758,12 +776,14 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                     counts=15000;
                 else if(counts>0&&counts<6000)
                     counts=6000;
+                calculatecountsflag=1;
             }
         }
 
         //Toast.makeText(EditActivity.this,Double.toString(counts),Toast.LENGTH_SHORT).show();
         cutstartposition = (long) ((mStartPos*1.0 / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * counts);
         cutfinalposition = (long) ((mEndPos*1.0 / ((RelativeLayout) findViewById(R.id.dynamiclayout)).getWidth()) * counts);
+        //Toast.makeText(EditActivity.this,Double.toString(counts),Toast.LENGTH_SHORT).show();
         updatedotdisplay();
     }
 
