@@ -1,7 +1,11 @@
 package zsd.example.com.soundspread;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -235,9 +239,35 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
                 String sharePath=musicname;
                 //Uri uri = Uri.parse(sharePath);
                 Uri uri = Uri.fromFile(new File(sharePath));
+                String txtfile=musicname.replace(".mp3", ".txt");
+                String content="";
+                try {
+                    File filename = new File(txtfile); // 要读取以上路径的input。txt文件
+                    FileInputStream fileInputStream = new FileInputStream(filename);
+                    int len = 0;
+                    byte[] buffer = new byte[1024];
+                    ByteArrayOutputStream byteArrayInputStream = new ByteArrayOutputStream();
+                    while ((len = fileInputStream.read(buffer)) != -1) {
+                        byteArrayInputStream.write(buffer, 0, len);
+                    }
+
+                    content = new String(byteArrayInputStream.toByteArray());
+/*
+                    InputStreamReader reader = new InputStreamReader(new FileInputStream(filename)); // 建立一个输入流对象reader
+                    BufferedReader br = new BufferedReader(reader); // 建立一个对象，它把文件内容转成计算机能读懂的语言
+                    content = br.readLine();
+                    while (content != null) {
+                        content = br.readLine(); // 一次读入一行数据
+                    }
+                    */
+                } catch (Exception e) {
+                       e.printStackTrace();
+                }
+              //  Toast.makeText(MainActivity.this, content, Toast.LENGTH_SHORT).show();
                 Intent share = new Intent(Intent.ACTION_SEND);
                 share.setType("audio/*");
                 share.putExtra(Intent.EXTRA_STREAM, uri);
+                share.putExtra(Intent.EXTRA_TEXT,content);
                 share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 startActivity(Intent.createChooser(share, "Share Sound File"));
                 break;
