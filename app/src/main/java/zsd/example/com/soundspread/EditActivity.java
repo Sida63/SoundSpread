@@ -579,27 +579,27 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
 
     @Override
     public void waveformZoomIn() {
+        if (mWaveformView.canZoomIn())
+            counts=counts/2;
         mWaveformView.zoomIn();
         mStartPos = mWaveformView.getStart();
         mEndPos = mWaveformView.getEnd();
         mMaxPos = mWaveformView.maxPos();
         mOffset = mWaveformView.getOffset();
         mOffsetGoal = mOffset;
-        if (mWaveformView.canZoomIn())
-            counts=counts/2;
         updateDisplay();
     }
 
     @Override
     public void waveformZoomOut() {
+        if (mWaveformView.canZoomOut())
+            counts=counts*2;
         mWaveformView.zoomOut();
         mStartPos = mWaveformView.getStart();
         mEndPos = mWaveformView.getEnd();
         mMaxPos = mWaveformView.maxPos();
         mOffset = mWaveformView.getOffset();
         mOffsetGoal = mOffset;
-        if (mWaveformView.canZoomOut())
-            counts=counts*2;
         updateDisplay();
     }
    /* public void onItemSelected(AdapterView<?> parent,
@@ -772,10 +772,10 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                 counts=seconds*1000;
                 if(counts>15000&&counts<30000)
                     counts=30000;
-                else if(counts>6000&&counts<15000)
+                else if(counts>7500&&counts<=15000)
                     counts=15000;
-                else if(counts>0&&counts<6000)
-                    counts=6000;
+                else if(counts>0&&counts<=7500)
+                    counts=7500;
                 calculatecountsflag=1;
             }
         }
