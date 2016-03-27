@@ -12,6 +12,7 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -46,7 +47,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     private long secondbookmark;
     private long curretntime;
     private int calculatecountsflag=0;
-
+    private FTPUtils ftpUtils = null;
 
     private SamplePlayer mPlayer;
 
@@ -126,6 +127,11 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (android.os.Build.VERSION.SDK_INT > 9) {
+            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+            StrictMode.setThreadPolicy(policy);
+        }
+        InitFTPServerSetting();
         Intent intent=getIntent();
         Bundle bundle = intent.getExtras();
         musicname = (String) bundle.getSerializable("uri");
@@ -267,6 +273,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                                     MP3File f = new MP3File(musicname);
                                     //Toast.makeText(EditActivity.this,et.getText().toString(),Toast.LENGTH_SHORT).show();
                                     f.cut(cutstartposition, cutfinalposition, et.getText().toString());
+                                    ftpUtils.uploadFile("/mnt/sdcard/soundspread/clip/" + et.getText().toString()+".mp3", et.getText().toString()+".mp3");
                                     File filedir = new File("/mnt/sdcard/soundspread/clip/");
                                     if(!filedir.exists())
                                         filedir.mkdir();
@@ -926,5 +933,11 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                 updateDisplay();
             }
         }, 500);
+    }
+    public void InitFTPServerSetting() {
+        // TODO Auto-generated method stub
+        ftpUtils = FTPUtils.getInstance();
+        boolean flag = ftpUtils.initFTPSetting("192.168.23.1", 21, "Anonymous", "123456");
+
     }
 }

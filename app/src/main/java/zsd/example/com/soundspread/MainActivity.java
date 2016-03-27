@@ -35,6 +35,7 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
     private MediaPlayer mMediaPlayer=null;//媒体播放器
     private AudioManager mAudioManager=null;//声音管理器
     private Button buttonShare=null;
+    private Button buttonsharelink=null;
     private Button buttonFace=null;
     private Button mPlayButton=null;
     private Button mPauseButton=null;
@@ -47,6 +48,7 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
     private int maxStreamVolume;//最大音量
     private int currentStreamVolume;//当前音量
     private String musicname;
+    private String linkname;
     private TextView starttime;
     private TextView finishtime;
     private TextView textbar;
@@ -91,9 +93,10 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
         {
             musicName.setText(m.group().toString());
         }
-
+        linkname=musicName.getText().toString();
         mAudioManager = (AudioManager)this.getSystemService(AUDIO_SERVICE);
         buttonShare=(Button)findViewById(R.id.buttonshare);
+        buttonsharelink=(Button)findViewById(R.id.sharelink);
        // buttonFace=(Button)findViewById(R.id.facebook);
         mPlayButton=(Button)findViewById(R.id.Play);
         mPauseButton=(Button)findViewById(R.id.Pause);
@@ -145,6 +148,7 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
         addbookmark.setOnClickListener(this);
         checkbookmark.setOnClickListener(this);
         buttonShare.setOnClickListener(this);
+        buttonsharelink.setOnClickListener(this);
         maxStreamVolume=mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
         currentStreamVolume=mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
         mSoundSeekBar.setMax(maxStreamVolume);
@@ -240,6 +244,15 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
                 share.putExtra(Intent.EXTRA_STREAM, uri);
                 share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 startActivity(Intent.createChooser(share, "Share Sound File"));
+                break;
+            case R.id.sharelink:
+                //Uri uri = Uri.parse(sharePath);
+                String link="ftp://192.168.23.1/data/"+linkname;
+                Intent sharelink = new Intent(Intent.ACTION_SEND);
+                sharelink.setType("text/plain");
+                sharelink.putExtra(Intent.EXTRA_TEXT, link);
+                sharelink.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivity(Intent.createChooser(sharelink, "Share Sound File Link"));
                 break;
             /*
             case R.id.facebook:

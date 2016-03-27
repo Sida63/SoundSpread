@@ -111,15 +111,14 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Share"
+        android:text="ShareAudio"
         android:id="@+id/buttonshare"
         android:background="@drawable/mainmenubutton"
-        android:textSize="12dp"
+        android:textSize="11dp"
         android:textColor="#ffffff"
+        android:layout_marginBottom="18dp"
         android:layout_above="@+id/textView2"
-        android:layout_alignLeft="@+id/textView2"
-        android:layout_alignStart="@+id/textView2"
-        android:layout_marginBottom="19dp" />
+        android:layout_alignStart="@+id/Play" />
 
     <zsd.example.com.soundspread.VisualizerView
         android:id="@+id/myvisualizerview"
@@ -149,5 +148,16 @@
         android:layout_alignParentEnd="true"
         android:layout_marginRight="14dp"
         android:layout_marginEnd="14dp" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ShareLink"
+        android:id="@+id/sharelink"
+        android:background="@drawable/mainmenubutton"
+        android:textSize="11dp"
+        android:textColor="#ffffff"
+        android:layout_alignTop="@+id/buttonshare"
+        android:layout_toEndOf="@+id/Pause" />
 
 </RelativeLayout>
