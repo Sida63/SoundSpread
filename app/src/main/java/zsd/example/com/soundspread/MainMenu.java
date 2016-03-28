@@ -20,6 +20,8 @@ public class MainMenu extends AppCompatActivity {
         Button viewClips = (Button) findViewById(R.id.viewclips);
         Button chooseFile = (Button) findViewById(R.id.choosefile);
         Button webBrowser = (Button) findViewById(R.id.webbrowser);
+        Button about = (Button) findViewById(R.id.buttonabout);
+        about.setOnClickListener(new ButtonClickListener());
         webBrowser.setOnClickListener(new ButtonClickListener());
         viewClips.setOnClickListener(new ButtonClickListener());
         chooseFile.setOnClickListener(new ButtonClickListener());
@@ -67,6 +69,11 @@ public class MainMenu extends AppCompatActivity {
                 String link="http://podbay.fm/browse/top";
                 Uri contenturl = Uri.parse(link);
                 intent.setData(contenturl);
+                startActivity(intent);
+            }
+            if (v.getId() == R.id.buttonabout) {
+                Intent intent = new Intent();
+                intent.setClass(MainMenu.this, AboutActivity.class);
                 startActivity(intent);
             }
 

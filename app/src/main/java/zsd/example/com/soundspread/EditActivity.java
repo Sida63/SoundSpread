@@ -47,7 +47,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     private long secondbookmark;
     private long curretntime;
     private int calculatecountsflag=0;
-    private FTPUtils ftpUtils = null;
+    private  FTPUtils ftpUtils = null;
 
     private SamplePlayer mPlayer;
 
