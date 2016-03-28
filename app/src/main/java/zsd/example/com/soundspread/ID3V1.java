@@ -85,10 +85,10 @@ public class ID3V1 {
     public String toString(){
         StringBuffer buffer = new StringBuffer();
         buffer.append("Title: "+title+"\n");
-        buffer.append("Artist: "+artist+"\n");
-        buffer.append("Album: "+album+"\n");
+      //  buffer.append("Artist: "+artist+"\n");
+        buffer.append("Full Podcast: "+album+"\n");
         buffer.append("Year: "+year+"\n");
-        buffer.append("Comment: "+comment+"\n");
+        //buffer.append("Comment: "+comment+"\n");
         return buffer.toString();
     }
 }

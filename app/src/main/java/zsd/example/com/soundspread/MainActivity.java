@@ -268,6 +268,7 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
                        e.printStackTrace();
                 }
               //  Toast.makeText(MainActivity.this, content, Toast.LENGTH_SHORT).show();
+                content=content+"\n"+"\n"+"ftp://192.168.23.1/data/"+linkname;
                 Intent share = new Intent(Intent.ACTION_SEND);
                 share.setType("audio/*");
                 share.putExtra(Intent.EXTRA_STREAM, uri);
@@ -277,7 +278,29 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
                 break;
             case R.id.sharelink:
                 //Uri uri = Uri.parse(sharePath);
+
+               /*
+
+                String txtfile2=musicname.replace(".mp3", ".txt");
+                String templecon="";
+                try {
+                    File filename2 = new File(txtfile2); // 要读取以上路径的input。txt文件
+                    FileInputStream fileInputStream2 = new FileInputStream(filename2);
+                    int len2 = 0;
+                    byte[] buffer2 = new byte[1024];
+                    ByteArrayOutputStream byteArrayInputStream2 = new ByteArrayOutputStream();
+                    while ((len2 = fileInputStream2.read(buffer2)) != -1) {
+                        byteArrayInputStream2.write(buffer2, 0, len2);
+                    }
+
+                    templecon = new String(byteArrayInputStream2.toByteArray());
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                */
                 String link="ftp://192.168.23.1/data/"+linkname;
+               // link=link+"\n"+"\n"+templecon;
                 Intent sharelink = new Intent(Intent.ACTION_SEND);
                 sharelink.setType("text/plain");
                 sharelink.putExtra(Intent.EXTRA_TEXT, link);

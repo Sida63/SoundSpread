@@ -22,7 +22,7 @@
 
     <ImageView android:id="@+id/splashscreen" android:layout_width="wrap_content"
         android:layout_height="fill_parent"
-        android:src="@drawable/podcast"
+        android:src="@drawable/ic_launcher_app"
         android:layout_gravity="center"
         android:layout_alignRight="@+id/textView4"
         android:layout_alignEnd="@+id/textView4"
@@ -38,7 +38,7 @@
         android:id="@+id/linearLayout">
         <TextView android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="SOUND"
+            android:text="POD"
             android:layout_weight=".50"
             android:textStyle="bold"
             android:textColor="#f10002"
@@ -52,7 +52,7 @@
             android:layout_height="wrap_content"
             android:layout_weight=".50"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="SPREAD"
+            android:text="CUTS"
             android:id="@+id/textView"
             android:textColor="#F10002"
             android:textSize="30dp"
@@ -63,7 +63,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Version 4.0"
+        android:text="Version 6.0"
         android:id="@+id/textView5"
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true" />
