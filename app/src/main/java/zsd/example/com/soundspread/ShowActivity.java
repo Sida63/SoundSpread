@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -61,16 +62,26 @@ public class ShowActivity extends AppCompatActivity {
         Toast.makeText(ShowActivity.this, path, Toast.LENGTH_SHORT);
         File file=new File(path);
         File[] filelist =file.listFiles();
-        String []filename=new String[filelist.length];
+        List<String> filename=new ArrayList<String>();
         /*listItem = new ArrayList<HashMap<String, Object>>();
         for(int i=0;i<filelist.length;i++){
             HashMap<String, Object> map = new HashMap<String, Object>();
             map.put("filename",filelist[i].getName().toString());
             listItem.add(map);*/
         for(int i=0;i<filelist.length;i++){
-            filename[i]=filelist[i].getName().toString();
+            String namestring=filelist[i].getName().toString();
+
+            if((namestring.endsWith(".mp3")))
+            {
+
+                filename.add(namestring);
+            }
+
+
         }
-        items=filename;
+        items=new String[filename.size()];
+        for(int i=0;i<filename.size();i++)
+            items[i]=filename.get(i).toString();
 
     }
 }

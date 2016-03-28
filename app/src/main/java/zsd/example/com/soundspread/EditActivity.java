@@ -30,6 +30,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
@@ -47,7 +48,8 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     private long secondbookmark;
     private long curretntime;
     private int calculatecountsflag=0;
-    private  FTPUtils ftpUtils = null;
+    private FTPUtils ftpUtils = null;
+
 
     private SamplePlayer mPlayer;
 
@@ -273,11 +275,9 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                                     MP3File f = new MP3File(musicname);
                                     //Toast.makeText(EditActivity.this,et.getText().toString(),Toast.LENGTH_SHORT).show();
                                     f.cut(cutstartposition, cutfinalposition, et.getText().toString());
+                                    createtxt(et.getText().toString());
                                     ftpUtils.uploadFile("/mnt/sdcard/soundspread/clip/" + et.getText().toString()+".mp3", et.getText().toString()+".mp3");
-                                    File filedir = new File("/mnt/sdcard/soundspread/clip/");
-                                    if(!filedir.exists())
-                                        filedir.mkdir();
-                                    String fileName = "/mnt/sdcard/soundspread/clip/" + et.getText().toString() + ".txt";
+                                    
 
                                     Toast.makeText(EditActivity.this, "MP3 file is cut successfully", Toast.LENGTH_SHORT).show();
                                 } catch (Exception ex) {
@@ -297,6 +297,25 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             }
         });
         updateDisplay();
+    }
+
+    private void createtxt(String clna){
+        File filedir = new File("/mnt/sdcard/soundspread/clip/");
+        if(!filedir.exists())
+            filedir.mkdir();
+        String fileName = "/mnt/sdcard/soundspread/clip/" + clna + ".txt";
+        File mp3file= new File(musicname);
+        String tempcontent=ID3V1.main(mp3file);
+        try {
+            FileOutputStream fos = new FileOutputStream(fileName);
+            fos.write(tempcontent.getBytes());
+            fos.close();
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+
     }
 
     private void loadplayer() {
