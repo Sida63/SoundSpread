@@ -20,15 +20,16 @@ public class ID3V1 {
     private byte genre;
     private File file;
     //可以用MP3文件测试ID3V1解析的结果
-    public static void main(String[] args) {
-        File f = new File("f:/media/mp3/other/huozhe.mp3");
+    public static String main(File f) {
+
         ID3V1 id3v1 = new ID3V1(f);
         try {
             id3v1.initialize();
-            System.out.println(id3v1.toString());
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return(id3v1.toString());
     }
     public ID3V1(File file) {
         this.file = file;
@@ -65,13 +66,29 @@ public class ID3V1 {
         track = array[123];
         genre = array[124];
     }
+/*
+    public String getTag(String wantwhat){
+        String result="";
+        switch (wantwhat){
+            case "title": result=title;
+                break;
+            case "artist": result=artist;
+                break;
+            case "album": result=album;
+                break;
+            case "year": result=year;
+                break;
+        }
+        return result;
+    }
+*/
     public String toString(){
         StringBuffer buffer = new StringBuffer();
-        buffer.append("标题="+title+"\n");
-        buffer.append("歌手="+artist+"\n");
-        buffer.append("专辑="+album+"\n");
-        buffer.append("年代="+year+"\n");
-        buffer.append("注释="+comment+"\n");
+        buffer.append("Title: "+title+"\n");
+      //  buffer.append("Artist: "+artist+"\n");
+        buffer.append("Full Podcast: "+album+"\n");
+        buffer.append("Year: "+year+"\n");
+        //buffer.append("Comment: "+comment+"\n");
         return buffer.toString();
     }
 }
