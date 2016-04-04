@@ -279,7 +279,7 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
             case R.id.sharelink:
                 //Uri uri = Uri.parse(sharePath);
 
-               /*
+
 
                 String txtfile2=musicname.replace(".mp3", ".txt");
                 String templecon="";
@@ -298,9 +298,9 @@ public class MainActivity extends Activity implements OnClickListener ,SeekBar.O
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                */
+
                 String link="ftp://192.168.23.1/data/"+linkname;
-               // link=link+"\n"+"\n"+templecon;
+                link=link+"\n"+"\n"+templecon;
                 Intent sharelink = new Intent(Intent.ACTION_SEND);
                 sharelink.setType("text/plain");
                 sharelink.putExtra(Intent.EXTRA_TEXT, link);
