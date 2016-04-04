@@ -10,9 +10,11 @@
     tools:context="zsd.example.com.soundspread.Splash"
     android:background="#FFFFFF">
     <ImageView android:id="@+id/splashscreen" android:layout_width="wrap_content"
-        android:layout_height="fill_parent"
-        android:src="@drawable/ic_launcher_app"
-        android:layout_gravity="center"/>
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_launcher_web"
+        android:layout_gravity="center"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true" />
 
     <LinearLayout android:layout_width="fill_parent"
         android:layout_height="wrap_content"

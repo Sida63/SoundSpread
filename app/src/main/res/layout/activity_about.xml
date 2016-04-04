@@ -16,22 +16,21 @@
         android:text="Allows podcast listeners to quickly and easily isolate, edit and share clips that resonate with them."
         android:id="@+id/textView4"
         android:textColor="#000000"
+        android:layout_alignParentStart="true"
         android:layout_below="@+id/textView5"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentLeft="true" />
 
     <ImageView android:id="@+id/splashscreen" android:layout_width="wrap_content"
         android:layout_height="fill_parent"
         android:src="@drawable/ic_launcher_app"
-        android:layout_gravity="center"
-        android:layout_alignRight="@+id/textView4"
-        android:layout_alignEnd="@+id/textView4"
+
+        android:layout_centerHorizontal="true"
         android:layout_alignBottom="@+id/linearLayout" />
 
     <LinearLayout android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="120dp"
+        android:layout_marginTop="220dp"
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
@@ -65,6 +64,7 @@
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="Version 6.0"
         android:id="@+id/textView5"
-        android:layout_centerVertical="true"
+        android:layout_marginTop="48dp"
+        android:layout_below="@+id/linearLayout"
         android:layout_centerHorizontal="true" />
 </RelativeLayout>
