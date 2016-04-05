@@ -24,6 +24,7 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".ShowActivity"
+            android:label="My Clips"
             android:screenOrientation="portrait" />
         <activity
             android:name=".ShareActivity"
@@ -33,6 +34,7 @@
             android:screenOrientation="portrait"></activity>
         <activity
             android:name=".FindFile"
+            android:label="My Podcasts"
             android:screenOrientation="portrait" />
         <activity
             android:name=".Splash"

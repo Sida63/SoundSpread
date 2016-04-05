@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.StrictMode;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -30,6 +31,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -271,21 +273,48 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
                             @Override
                             public void onClick(DialogInterface dialog,
                                                 int which) {
-                                try {
-                                    MP3File f = new MP3File(musicname);
-                                    //Toast.makeText(EditActivity.this,et.getText().toString(),Toast.LENGTH_SHORT).show();
-                                    f.cut(cutstartposition, cutfinalposition, et.getText().toString());
-                                    createtxt(et.getText().toString());
-                                    ftpUtils.uploadFile("/mnt/sdcard/soundspread/clip/" + et.getText().toString()+".mp3", et.getText().toString()+".mp3");
-                                    
 
-                                    Toast.makeText(EditActivity.this, "MP3 file is cut successfully", Toast.LENGTH_SHORT).show();
-                                } catch (Exception ex) {
-                                    ex.printStackTrace();
+
+                                String username = et.getText().toString();
+                                if (username.length() != 0) {
+                                    if (matchfile(username)) {
+
+                                        new AlertDialog.Builder(EditActivity.this).setTitle("SAME FILENAME")//设置对话框标题
+
+                                                .setMessage("Filename already exists.Please use another name.")//设置显示的内容
+
+                                                .setPositiveButton("OK", new DialogInterface.OnClickListener() {//添加确定按钮
+
+
+                                                    @Override
+
+                                                    public void onClick(DialogInterface dialog, int which) {//确定按钮的响应事件
+
+
+                                                    }
+
+                                                }).show();//在按键响应事件中显示此对话框
+
+
+                                    } else {
+
+
+                                        try {
+                                            MP3File f = new MP3File(musicname);
+                                            f.cut(cutstartposition, cutfinalposition, username);
+                                            createtxt(et.getText().toString());
+                                            ftpUtils.uploadFile("/mnt/sdcard/soundspread/clip/" + et.getText().toString() + ".mp3", et.getText().toString() + ".mp3");
+
+                                            Toast.makeText(EditActivity.this, "MP3 file is cut successfully", Toast.LENGTH_SHORT).show();
+
+                                        } catch (Exception exx) {
+                                            exx.printStackTrace();
+                                        }
+                                    }
                                 }
                             }
-                        })
-                        .setNegativeButton("Cancel", null).show();
+
+                        }).setNegativeButton("Cancel", null).show();
             }
         });
         checkclipfile=(Button)findViewById(R.id.checkclipfile);
@@ -297,6 +326,28 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
             }
         });
         updateDisplay();
+    }
+
+
+    public boolean matchfile(String ofilename){
+        boolean flag = false;
+        String path="/mnt/sdcard/soundspread/clip/";
+        File file=new File(path);
+        if (file.exists()){
+            File[] filelist =file.listFiles();
+            ofilename=ofilename+".mp3";
+
+            for(int i=0;i<filelist.length;i++){
+
+                if(ofilename.equals(filelist[i].getName().toString())) {
+                    flag = true;
+                    break;
+                }
+
+            }
+        }
+        return flag;
+
     }
 
     private void createtxt(String clna){
@@ -650,6 +701,7 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
     private void resetPositions() {
         mStartPos = mWaveformView.secondsToPixels(0.0);
         mEndPos = mWaveformView.secondsToPixels(15.0);
+
     }
     private synchronized void updateDisplay() {
        // int frames = mWaveformView.millisecsToPixels(0);
@@ -933,6 +985,8 @@ public class EditActivity extends AppCompatActivity implements MarkerView.Marker
         if (mEndPos > mMaxPos)
             mEndPos = mMaxPos;
         updateDisplay();
+        markerFocus(mEndMarker);
+        markerFocus(mStartMarker);
     }
     public void onConfigurationChanged(Configuration newConfig) {
         Log.v("Ringdroid", "EditActivity onConfigurationChanged");

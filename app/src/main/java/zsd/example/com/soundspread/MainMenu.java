@@ -37,31 +37,44 @@ public class MainMenu extends AppCompatActivity {
 
                 File file=new File(path);
                 File[] filelist =file.listFiles();
-                if (filelist.length>0 ) {
-                    Intent intent = new Intent();
-                    intent.setClass(MainMenu.this, ShowActivity.class);
-                    startActivity(intent);
+                if (!file.exists()){
+                    Toast.makeText(MainMenu.this, "There is no file", Toast.LENGTH_SHORT).show();
+                    file.mkdir();
+                }else{
+                    if (filelist!=null ) {
+                        Intent intent = new Intent();
+                        intent.setClass(MainMenu.this, ShowActivity.class);
+                        startActivity(intent);
+                    }
+                    else
+                    {
+                        Toast.makeText(MainMenu.this, "No clip yet", Toast.LENGTH_SHORT);
+                    }
                 }
-                else
-                {
-                    Toast.makeText(MainMenu.this, "No clip yet", Toast.LENGTH_SHORT);
-                }
+
 
             }
             if (v.getId() == R.id.choosefile) {
                 String path="/mnt/sdcard/soundspread/";
 
                 File file=new File(path);
-                File[] filelist =file.listFiles();
-                if (filelist.length>0) {
-                    Intent intent = new Intent();
-                    intent.setClass(MainMenu.this, FindFile.class);
-                    startActivity(intent);
+                if (!file.exists()){
+                    Toast.makeText(MainMenu.this, "There is no file", Toast.LENGTH_SHORT).show();
+                    file.mkdir();
                 }
-                else
-                {
-                    Toast.makeText(MainMenu.this, "No file yet", Toast.LENGTH_SHORT).show();
+                else{
+                    File[] filelist =file.listFiles();
+                    if (filelist.length>0) {
+                        Intent intent = new Intent();
+                        intent.setClass(MainMenu.this, FindFile.class);
+                        startActivity(intent);
+                    }
+                    else
+                    {
+                        Toast.makeText(MainMenu.this, "Please download MP3 into Soundspread or Download folder", Toast.LENGTH_SHORT).show();
+                    }
                 }
+
             }
             if (v.getId() == R.id.webbrowser) {
                 Intent intent= new Intent();
